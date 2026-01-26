@@ -14,7 +14,7 @@ pip install tkinterdnd2
 
 InfluxDBをインストール。 
 
-Grafanaをインストール。.jsonファイルをインポートして各種設定を完了させる。  
+Grafanaをインストール。後日アップロード予定の.jsonファイルをインポートして各種設定を完了させる。  
 - Grafana → Dashboards → Import  
 - JSON Upload または JSON を貼り付け  
 - Data source を InfluxDB に設定  
