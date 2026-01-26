@@ -12,7 +12,8 @@ pip install influxdb
 pip install customtkinter  
 pip install tkinterdnd2  
 
-InfluxDBをインストール。  
+InfluxDBをインストール。 
+
 Grafanaをインストール。.jsonファイルをインポートして各種設定を完了させる。  
 - Grafana → Dashboards → Import  
 - JSON Upload または JSON を貼り付け  
