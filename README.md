@@ -13,7 +13,7 @@ pip install customtkinter
 pip install tkinterdnd2  
 
 InfluxDBをインストール。  
-Grafanaをインストール。各種表示設定を行う。  
+Grafanaをインストール。.jsonファイルをインポートして各種設定を完了させる。  
 
 ## 動作手順：
 ### STM-2専用ソフトウェア
