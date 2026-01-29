@@ -1,7 +1,6 @@
 # INFICON_STM-2_remote_monitor
 - INFICON STM-2 USB 薄膜蒸着レート/膜厚モニター の.logファイルを遠隔監視するためのシステム。（INFICON非公式）  
 - **InfluxDB** と **Grafana** を用いてリアルタイムに可視化します。  
-- このリポジトリには、すぐに利用できる Grafana ダッシュボード（JSON）が含まれています。  
  
 ![外部向け説明資料](https://github.com/user-attachments/assets/eb5fce0c-8dbf-4847-b3d2-5c2d21164ab5)
 **注意：このプログラムはINFICON社の公式なものではありません。**  
@@ -14,11 +13,11 @@
 
 - STM-2 の膜厚・成膜レート・周波数をリアルタイム監視
 - 目標膜厚の 80% を超えた際に自動アラート
-- Grafana ダッシュボードをそのままインポート可能
+- Docker により InfluxDB・Grafana の環境構築が不要  
 - 研究室の自動化・遠隔監視に適したシンプルな構成
 
 
-## STM-2接続パソコンの準備：
+## 🖥️ STM-2 接続パソコンの準備：
 Windowsマシンを想定しています。  
 Windows Defender ファイアウォールに受信規則を追加してポート3000を開放する。  
 固定IPアドレスを設定する。あらかじめネットワーク管理者に確認することをおすすめします。  
