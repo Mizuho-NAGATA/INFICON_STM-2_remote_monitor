@@ -62,21 +62,17 @@ cd INFICON_STM-2_remote_monitor
 ```
 
 ### 2-3. **start_monitoring.bat をダブルクリックする**
-## ▶ 起動ボタン（ワンクリック）
-ボタンを右クリック → 「名前を付けて保存」で bat を保存してください。
-保存後、ダブルクリックで実行できます。  
-
-<p>
-  <a href="https://github.com/Mizuho-NAGATA/INFICON_STM-2_remote_monitor/raw/main/start_monitoring.bat">
-    <img src="https://img.shields.io/badge/Start%20Monitoring.bat-Download-blue?style=for-the-badge">
-  </a>
-</p>
+## ▶ 起動
+C:\Users\（ユーザー名）\INFICON_STM-2_remote_monitor\INFICON_STM-2_remote_monitor\start_monitoring.bat  
+をダブルクリックして実行
 - Docker Desktop が自動起動<br>  
 - 完全起動まで自動待機<br>  
 - InfluxDB / Grafana が自動起動<br>  
 - Grafana が自動でブラウザで開く<br>  
 
-## ■ 停止ボタン（ワンクリック）
+## ■ 停止
+C:\Users\（ユーザー名）\INFICON_STM-2_remote_monitor\INFICON_STM-2_remote_monitor\stop_monitoring.bat  
+をダブルクリックして停止。
 
 <p>
   <a href="https://github.com/Mizuho-NAGATA/INFICON_STM-2_remote_monitor/raw/main/stop_monitoring.bat">
