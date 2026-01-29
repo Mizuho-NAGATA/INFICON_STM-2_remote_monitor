@@ -34,11 +34,12 @@ stm2-reader:
     INFLUX_DB: stm2
     MATERIAL: Al
     ALERT_THRESHOLD: 100
-    STM2_LOG_PATH: /app/data/stm2.log
+    STM2_LOG_PATH: /app/data/stm2.log   # ← 追加
   volumes:
-    - ../data:/app/data
+    - ../data:/app/data                 # ← 追加
   depends_on:
     - stm2-influxdb
+
 
     environment:
       INFLUX_HOST: influxdb
@@ -52,6 +53,7 @@ stm2-reader:
 volumes:
   influxdb-data:
   grafana-data:
+
 
 
 
