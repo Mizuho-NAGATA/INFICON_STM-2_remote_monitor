@@ -15,7 +15,7 @@
 - 目標膜厚の 80% を超えた際に自動アラート
 - Docker により InfluxDB と Grafana の環境構築が不要  
 
-
+---
 ## 🖥️ 1. STM-2 接続パソコンの準備：
 Windowsマシンを想定しています。  
 
@@ -42,31 +42,31 @@ pip install tkinterdnd2
 ### 1-4. STM-2専用ソフトウェア
 INFICON公式STM-2専用ソフトウェアを起動。必要な設定をして記録 start。
 
-## 🐳 2. Docker による InfluxDB / Grafana の起動
+---
+## 🐳 2. 監視システムの起動方法
 ### 2-1. Docker Desktop をインストール  
 Windows で Docker を利用するために、Docker Desktop をインストールします。  
 公式サイト：
 <a href="https://www.docker.com/products/docker-desktop/" target="_blank">https://www.docker.com/products/docker-desktop/</a>
 
-### 2-2. リポジトリを取得
-コマンドプロンプトで下記を実行。  
-```bash
-git clone https://github.com/Mizuho-NAGATA/INFICON_STM-2_remote_monitor
+### 2-2. リポジトリを取得  
+```
+git clone ...
 cd INFICON_STM-2_remote_monitor
 ```
 
-### 2-3. Docker を起動
+### 2-3. **start_monitoring.bat をダブルクリックするだけ**  
+- Docker Desktop が自動起動  
+- 完全起動まで自動待機  
+- InfluxDB / Grafana が自動起動  
+- Grafana が自動でブラウザで開く  
+- ログが自動表示  
+- エラーは logs/error_*.txt に保存  
 
-```bash
-docker compose up -d
-```
+### 2-3. 停止したいとき  
+→ stop_monitoring.bat をダブルクリック
 
-これだけで：
-
-- InfluxDB（8086）
-- Grafana（3000）
-
-が自動で起動します。
+---
 
 ## 🖱️ 3. GUI アプリの使い方
 GUI は Docker に入れず、Windows 上で動かします。
@@ -89,7 +89,8 @@ http://（STM-2接続パソコンの固定IPアドレス）:3000
 - Grafana が表示されます  
 - ダッシュボードは自動ロード済み  
 - Data source は InfluxDB に設定済み
-
+- 
+---
 ## 📁 5. ディレクトリ構成
 ```
 INFICON_STM-2_remote_monitor/
@@ -105,6 +106,8 @@ INFICON_STM-2_remote_monitor/
             └── datasources/
                 └── influxdb.yml
 ```
+
+---
 ## 備考  
 - InfluxDB は v1.x を使用（GUI のコードと互換性あり）  
 - GUI は Windows 上で動作し、Docker とは独立  
