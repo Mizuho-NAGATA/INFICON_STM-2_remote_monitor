@@ -63,7 +63,7 @@ cd INFICON_STM-2_remote_monitor
 
 ### 2-3. **start_monitoring.bat をダブルクリックする**
 ## ▶ 起動
-C:\Users\（ユーザー名）\INFICON_STM-2_remote_monitor\INFICON_STM-2_remote_monitor\start_monitoring.bat  
+C:\Users\（ユーザー名）\INFICON_STM-2_remote_monitor\start_monitoring.bat  
 をダブルクリックして実行。  
 STM-2接続パソコンの固定IPアドレスを入力します。  
 ![固定IPアドレスを入力](https://github.com/user-attachments/assets/d817f15f-ead5-4cc5-8cae-684a45a88b4d)
@@ -74,7 +74,7 @@ STM-2接続パソコンの固定IPアドレスを入力します。
 - Grafana が自動でブラウザで開く<br>  
 
 ## ■ 停止
-C:\Users\（ユーザー名）\INFICON_STM-2_remote_monitor\INFICON_STM-2_remote_monitor\stop_monitoring.bat  
+C:\Users\（ユーザー名）\INFICON_STM-2_remote_monitor\stop_monitoring.bat  
 をダブルクリックして停止。
 
 ---
