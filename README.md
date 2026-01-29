@@ -64,7 +64,9 @@ cd INFICON_STM-2_remote_monitor
 ### 2-3. **start_monitoring.bat をダブルクリックする**
 ## ▶ 起動
 C:\Users\（ユーザー名）\INFICON_STM-2_remote_monitor\INFICON_STM-2_remote_monitor\start_monitoring.bat  
-をダブルクリックして実行。 
+をダブルクリックして実行。  
+![固定IPアドレスを入力](https://github.com/user-attachments/assets/d817f15f-ead5-4cc5-8cae-684a45a88b4d)
+
 STM-2接続パソコンの固定IPアドレスを入力します。 
 - Docker Desktop が自動起動<br>  
 - 完全起動まで自動待機<br>  
