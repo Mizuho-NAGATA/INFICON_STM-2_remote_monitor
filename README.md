@@ -61,16 +61,28 @@ git clone https://github.com/Mizuho-NAGATA/INFICON_STM-2_remote_monitor
 cd INFICON_STM-2_remote_monitor
 ```
 
-### 2-3. **start_monitoring.bat をダブルクリックするだけ**  
-- Docker Desktop が自動起動  
-- 完全起動まで自動待機  
-- InfluxDB / Grafana が自動起動  
-- Grafana が自動でブラウザで開く  
-- ログが自動表示  
-- エラーは logs/error_*.txt に保存  
+### 2-3. **start_monitoring.bat をダブルクリックする**
+## ▶ 起動ボタン（ワンクリック）
 
-### 2-3. 停止したいとき  
-→ stop_monitoring.bat をダブルクリック
+下のボタンをクリックすると、起動用の bat ファイルをダウンロードできます。
+
+<p>
+  <a href="https://github.com/Mizuho-NAGATA/INFICON_STM-2_remote_monitor/raw/main/start_monitoring.bat">
+    <img src="https://img.shields.io/badge/Start%20Monitoring.bat-Download-blue?style=for-the-badge">
+  </a>
+</p>
+- Docker Desktop が自動起動<br>  
+- 完全起動まで自動待機<br>  
+- InfluxDB / Grafana が自動起動<br>  
+- Grafana が自動でブラウザで開く<br>  
+
+## ■ 停止ボタン（ワンクリック）
+
+<p>
+  <a href="https://github.com/Mizuho-NAGATA/INFICON_STM-2_remote_monitor/raw/main/stop_monitoring.bat">
+    <img src="https://img.shields.io/badge/Stop%20Monitoring.bat-Download-red?style=for-the-badge">
+  </a>
+</p>
 
 ---
 
