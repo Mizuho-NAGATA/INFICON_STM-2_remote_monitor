@@ -24,7 +24,7 @@ services:
       - ./docker/grafana/provisioning:/etc/grafana/provisioning
 
   stm2-reader:
-    build: ./docker/stm2-reader
+    build: ./stm2-reader
     container_name: stm2-reader
     depends_on:
       - influxdb
@@ -41,3 +41,4 @@ services:
 volumes:
   influxdb-data:
   grafana-data:
+
