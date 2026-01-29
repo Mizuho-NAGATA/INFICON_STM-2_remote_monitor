@@ -34,6 +34,15 @@ pip install tkinterdnd2
 
 ## 動作手順：
 
+### Git for Windows をインストール
+- 公式サイトを開く
+<a href="https://git-scm.com/download/win" target="_blank" rel="noopener">https://git-scm.com/download/win</a>
+- インストーラーを実行
+→ 「Next」を押していくだけで OK
+→ 特に設定を変える必要はありません
+→ “Git Bash Here” が追加されます
+
+
 ### STM-2専用ソフトウェア
 INFICON公式STM-2専用ソフトウェアを起動。必要な設定をして記録 start。
 
