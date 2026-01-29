@@ -95,24 +95,23 @@ http://（STM-2接続パソコンの固定IPアドレス）:3000
 - 
 ---
 ## 📁 5. ディレクトリ構成
-```
-INFICON_STM-2_remote_monitor/
-├── start_monitoring.bat        ← 起動ボタン
-├── stop_monitoring.bat         ← 停止ボタン
+```INFICON_STM-2_remote_monitor/
+├── start_monitoring.bat        ← 監視システムをワンクリックで起動（Docker自動起動・Grafana自動表示）
+├── stop_monitoring.bat         ← 監視システムをワンクリックで停止
 │
 ├── src/
-│   ├── gui_app.py
-│   └── stm2_reader_core.py
+│   ├── gui_app.py              ← STM-2 の .log を読み取り InfluxDB に送信する GUI アプリ
+│   └── stm2_reader_core.py     ← ログ解析とデータ送信のコア処理（GUI から呼び出される）
 │
-├── docker-compose.yml
+├── docker-compose.yml          ← InfluxDB と Grafana を起動する設定ファイル（bat が内部で使用）
 │
 └── docker/
     └── grafana/
         └── provisioning/
             ├── dashboards/
-            │   └── STM-2-1769471897840.json
+            │   └── STM-2-1769471897840.json   ← Grafana ダッシュボードの自動読み込み設定
             └── datasources/
-                └── influxdb.yml
+                └── influxdb.yml               ← InfluxDB のデータソース設定（Grafana が自動で参照）
 ```
 
 ---
