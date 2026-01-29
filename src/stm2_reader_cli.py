@@ -1,3 +1,7 @@
+# 本ソフトウェアは Microsoft Copilot を活用して開発されました。
+# Copyright (c) 2026 NAGATA Mizuho. Institute of Laser Engineering, Osaka University.
+# Created on: 2026-01-20
+# Last updated on: 2026-01-26
 # stm2_reader_cli.py
 # Docker コンテナ内で動く「常時監視サービス」
 import os
@@ -33,3 +37,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
