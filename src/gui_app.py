@@ -1,7 +1,7 @@
 # 本ソフトウェアは Microsoft Copilot を活用して開発されました。
 # Copyright (c) 2026 NAGATA Mizuho. Institute of Laser Engineering, Osaka University.
 # Created on: 2026-01-20
-# Last updated on: 2026-01-26
+# Last updated on: 2026-01-29
 # gui_app.py
 # GUI をそのまま残しつつ、バックグラウンドで動く処理（ログを読み取って InfluxDB に送る)だけ core に委譲したバージョン
 import threading
@@ -156,4 +156,5 @@ label_status = ctk.CTkLabel(frame, text="Waiting…", font=default_font)
 label_status.grid(row=7, column=0, columnspan=3, **pad)
 
 root.mainloop()
+
 
