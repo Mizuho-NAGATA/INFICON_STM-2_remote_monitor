@@ -9,7 +9,7 @@ import os
 from stm2_reader_core import (
     MATERIAL_DATA,
     create_influx_client,
-    read_stm2_realtime   # ← 新しい関数を想定
+    tail_file
 )
 
 def main():
@@ -25,13 +25,17 @@ def main():
 
     alert_threshold = float(os.environ.get("ALERT_THRESHOLD", "100"))
 
-    # ログファイルを使わず、STM-2 から直接読み取る
-    read_stm2_realtime(
+    # STM-2 が生成するログファイルを tail する
+    log_path = os.environ.get("STM2_LOG_PATH", "/app/data/stm2.log")
+
+    tail_file(
+        filepath=log_path,
+        run_id="docker-run",
         material=material,
         density=density,
         z_ratio=z_ratio,
         alert_threshold=alert_threshold,
-        influx_client=client
+        client=client
     )
 
 if __name__ == "__main__":
