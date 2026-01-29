@@ -54,6 +54,8 @@ Windows で Docker を利用するために、Docker Desktop をインストー�
 ### 2-2. リポジトリを取得  
 ```
 git clone ...
+```
+```
 cd INFICON_STM-2_remote_monitor
 ```
 
