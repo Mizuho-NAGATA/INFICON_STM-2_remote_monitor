@@ -28,6 +28,7 @@ def main():
     # STM-2 が生成するログファイルを tail する
     log_path = os.environ.get("STM2_LOG_PATH", "/app/data/stm2.log")
 
+
     tail_file(
         filepath=log_path,
         run_id="docker-run",
@@ -40,3 +41,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
