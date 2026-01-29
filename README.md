@@ -35,12 +35,12 @@ pip install tkinterdnd2
 ### 1-3. Git for Windows をインストール
 - 公式サイトを開く
 <a href="https://git-scm.com/download/win" target="_blank" rel="noopener">https://git-scm.com/download/win</a>
-- インストーラーを実行
-→ 「Next」を押していくだけで OK
-→ 特に設定を変える必要はありません
-→ “Git Bash Here” が追加されます
+- インストーラーを実行  
+→ 「Next」を押していくだけで OK  
+→ 特に設定を変える必要はありません  
+→ “Git Bash Here” が追加されます  
 
-### STM-2専用ソフトウェア
+### 1-4. STM-2専用ソフトウェア
 INFICON公式STM-2専用ソフトウェアを起動。必要な設定をして記録 start。
 
 ## 🐳 Docker による InfluxDB / Grafana の起動
