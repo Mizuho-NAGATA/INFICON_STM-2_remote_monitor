@@ -25,8 +25,8 @@ services:
 
   stm2-reader:
     build:
-      context: ..
-      dockerfile: stm2-reader/Dockerfile
+      context: ./stm2-reader
+      dockerfile: Dockerfile
     container_name: stm2-reader
     depends_on:
       - influxdb
@@ -42,5 +42,6 @@ services:
 volumes:
   influxdb-data:
   grafana-data:
+
 
 
