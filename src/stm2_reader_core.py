@@ -1,7 +1,7 @@
 # 本ソフトウェアは Microsoft Copilot を活用して開発されました。
 # Copyright (c) 2026 NAGATA Mizuho. Institute of Laser Engineering, Osaka University.
 # Created on: 2026-01-20
-# Last updated on: 2026-01-26
+# Last updated on: 2026-01-29
 # stm2_reader_core.py
 # GUI と CLI の両方から使う「共通ロジック」だけをまとめたファイル
 import time
@@ -105,4 +105,5 @@ def tail_file(filepath, run_id, material, density, z_ratio, alert_threshold, cli
                     "fields": {"last": alert_state}
                 }])
                 prev_alert_state = alert_state
+
 
