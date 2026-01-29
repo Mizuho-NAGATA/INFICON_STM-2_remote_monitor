@@ -1,3 +1,6 @@
+echo REAL BAT PATH: %~f0
+pause
+
 @echo off
 cd /d "%~dp0"
 
@@ -80,4 +83,5 @@ echo.
 docker compose logs -f
 
 pause
+
 
