@@ -69,7 +69,8 @@ cd INFICON_STM-2_remote_monitor
 ---
 
 ## 🖱️ 3. GUI アプリの使い方
-GUI は Docker に入れず、Windows 上で動かします。
+GUI は Docker に入れず、Windows 上で動かします。  
+コマンドプロンプトで下記を実行。
 
 ```bash
 python src/gui_app.py
