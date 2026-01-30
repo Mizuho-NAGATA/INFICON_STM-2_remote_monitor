@@ -4,8 +4,9 @@
 # Last updated on: 2026-01-29
 # stm2_reader_core.py
 # GUI と CLI の両方から使う「共通ロジック」だけをまとめたファイル
-import time
 import os
+import time
+
 from influxdb import InfluxDBClient
 
 # --- 材料データ ---
@@ -17,30 +18,32 @@ from influxdb import InfluxDBClient
 #   ・元素周期表
 #   ・INFICON STM-2 説明書 A-1〜
 MATERIAL_DATA = {
-    "Al":  {"density": 2.699, "zratio": 1.08},
-    "Au":  {"density": 19.320, "zratio": 0.381},
+    "Al": {"density": 2.699, "zratio": 1.08},
+    "Au": {"density": 19.320, "zratio": 0.381},
     "CaO": {"density": 3.350, "zratio": 1.000},
-    "Cr":  {"density": 7.19,  "zratio": 0.305},
-    "Cu":  {"density": 8.96,  "zratio": 0.437},
-    "Fe":  {"density": 7.874, "zratio": 0.349},
-    "Ge":  {"density": 5.323, "zratio": 0.516},
-    "Mg":  {"density": 1.740, "zratio": 1.610},
-    "Mn":  {"density": 7.44,  "zratio": 0.377},
-    "Pb":  {"density": 11.350, "zratio": 1.13},
-    "Sn":  {"density": 7.310, "zratio": 0.72},
-    "Tb":  {"density": 8.229, "zratio": 0.66},
-    "Ti":  {"density": 4.54,  "zratio": 0.628},
+    "Cr": {"density": 7.19, "zratio": 0.305},
+    "Cu": {"density": 8.96, "zratio": 0.437},
+    "Fe": {"density": 7.874, "zratio": 0.349},
+    "Ge": {"density": 5.323, "zratio": 0.516},
+    "Mg": {"density": 1.740, "zratio": 1.610},
+    "Mn": {"density": 7.44, "zratio": 0.377},
+    "Pb": {"density": 11.350, "zratio": 1.13},
+    "Sn": {"density": 7.310, "zratio": 0.72},
+    "Tb": {"density": 8.229, "zratio": 0.66},
+    "Ti": {"density": 4.54, "zratio": 0.628},
 }
+
 
 # --- InfluxDB クライアント作成 ---
 def create_influx_client():
     host = os.environ.get("INFLUX_HOST", "localhost")
     port = int(os.environ.get("INFLUX_PORT", "8086"))
-    db   = os.environ.get("INFLUX_DB", "stm2")
+    db = os.environ.get("INFLUX_DB", "stm2")
 
     client = InfluxDBClient(host=host, port=port)
     client.switch_database(db)
     return client
+
 
 # --- CSV 1行パース ---
 def parse_csv_line(line):
@@ -52,14 +55,31 @@ def parse_csv_line(line):
             "time": float(parts[0]),
             "rate": float(parts[1]),
             "thickness": float(parts[2]),
-            "frequency": float(parts[3])
+            "frequency": float(parts[3]),
         }
     except ValueError:
         return None
 
+
 # --- tail 処理（GUI 非依存） ---
 def tail_file(filepath, run_id, material, density, z_ratio, alert_threshold, client):
     prev_alert_state = None
+
+    # target_thickness (nm) を計算して stm2_settings に送信
+    target_thickness_nm = (
+        alert_threshold / 10.0 / 0.8
+    )  # alert_threshold は target の 80% かつ Angstrom 単位
+
+    # 初回に target_thickness を送信
+    client.write_points(
+        [
+            {
+                "measurement": "stm2_settings",
+                "tags": {"run_id": run_id},
+                "fields": {"target_thickness": target_thickness_nm},
+            }
+        ]
+    )
 
     with open(filepath, "r", encoding="utf-8") as f:
         f.seek(0, 2)
@@ -79,31 +99,35 @@ def tail_file(filepath, run_id, material, density, z_ratio, alert_threshold, cli
             if not data:
                 continue
 
-            json_body = [{
-                "measurement": "stm2",
-                "tags": {
-                    "run_id": run_id,
-                    "material": material,
-                    "density": density,
-                    "z_ratio": z_ratio
-                },
-                "fields": {
-                    "time": data["time"],
-                    "rate": data["rate"],
-                    "thickness": data["thickness"],
-                    "frequency": data["frequency"]
+            json_body = [
+                {
+                    "measurement": "stm2",
+                    "tags": {
+                        "run_id": run_id,
+                        "material": material,
+                        "density": density,
+                        "z_ratio": z_ratio,
+                    },
+                    "fields": {
+                        "time": data["time"],
+                        "rate": data["rate"],
+                        "thickness": data["thickness"],
+                        "frequency": data["frequency"],
+                    },
                 }
-            }]
+            ]
             client.write_points(json_body)
 
             alert_state = 1 if data["thickness"] >= alert_threshold else 0
 
             if alert_state != prev_alert_state:
-                client.write_points([{
-                    "measurement": "stm2_settings",
-                    "tags": {"run_id": run_id},
-                    "fields": {"last": alert_state}
-                }])
+                client.write_points(
+                    [
+                        {
+                            "measurement": "stm2_settings",
+                            "tags": {"run_id": run_id},
+                            "fields": {"last": alert_state},
+                        }
+                    ]
+                )
                 prev_alert_state = alert_state
-
-
