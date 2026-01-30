@@ -1,7 +1,5 @@
 # 📊 STM-2 監視システム - 簡単セットアップガイド
 
-**パートタイマーの方でも安心してご利用いただけます！**
-
 ---
 
 ## 🚀 **1分で理解！簡単3ステップ**
@@ -222,5 +220,6 @@ Institute of Laser Engineering, Osaka University
 ```
 
 ---
+
 
 **🎉 準備完了！ Let's Start Monitoring! 🎉**
