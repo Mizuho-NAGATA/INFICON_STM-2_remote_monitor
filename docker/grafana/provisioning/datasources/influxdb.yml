@@ -7,3 +7,4 @@ datasources:
     url: http://influxdb:8086
     database: stm2
     isDefault: true
+    editable: false

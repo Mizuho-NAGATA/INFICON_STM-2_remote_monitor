@@ -19,8 +19,11 @@ services:
       - "3000:3000"
     depends_on:
       - influxdb
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
 
   stm2-reader:
     build:
@@ -28,7 +31,7 @@ services:
       dockerfile: docker/stm2-reader/Dockerfile
     container_name: stm2-reader
     environment:
-      INFLUX_HOST: stm2-influxdb
+      INFLUX_HOST: influxdb
       INFLUX_PORT: 8086
       INFLUX_DB: stm2
       MATERIAL: Al
