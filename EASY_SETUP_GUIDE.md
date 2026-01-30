@@ -36,7 +36,7 @@
 ### **【STEP 1】システム起動**
 1. `start_complete_system.bat` をダブルクリック
 2. 管理者権限の確認が出たら「はい」をクリック
-3. **自動で全部起動します！** ☕ コーヒーでも飲んで待ちましょう
+3. **自動で全部起動します！** 
 
 ```
 起動中の表示例：
@@ -223,3 +223,4 @@ Institute of Laser Engineering, Osaka University
 
 
 **🎉 準備完了！ Let's Start Monitoring! 🎉**
+
