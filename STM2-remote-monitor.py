@@ -1,8 +1,9 @@
 # -------------------------------------------------------------
-# 本ソフトウェアは Microsoft Copilot を活用して開発されました。
-# Copyright (c) 2026 NAGATA Mizuho. Institute of Laser Engineering, Osaka University.
+# 本ソフトウェアは Microsoft Copilot 、ChatGPT を活用して開発されました。
+# Copyright (c) 2026 NAGATA Mizuho.
+# Institute of Laser Engineering, Osaka University.
 # Created on: 2026-01-20
-# Last updated on: 2026-01-26
+# Last updated on: 2026-01-30
 #
 # pip install influxdb
 # pip install customtkinter
@@ -11,11 +12,12 @@
 
 import time
 import threading
+import os
+import csv
 from influxdb import InfluxDBClient
 import customtkinter as ctk
 from tkinterdnd2 import TkinterDnD, DND_FILES
 from tkinter import filedialog, messagebox
-import os
 
 # --- 材料データ ---
 # MATERIAL_DATA の出典
@@ -41,47 +43,59 @@ MATERIAL_DATA = {
     "Ti":  {"density": 4.54,  "zratio": 0.628},
 }
 
-# --- InfluxDB ---
+# =========================
+# InfluxDB
+# =========================
 client = InfluxDBClient(host="localhost", port=8086)
 client.switch_database("stm2")
 
-logging_active = False
+# =========================
+# スレッド制御
+# =========================
+logging_event = threading.Event()
 prev_alert_state = None
 
+# =========================
+# GUI スレッド呼び出し用
+# =========================
+def gui_call(func):
+    root.after(0, func)
 
-# --- CSV 1行パース ---
+# =========================
+# CSV 1行パース（堅牢版）
+# =========================
 def parse_csv_line(line):
-    parts = [p.strip() for p in line.split(",") if p.strip()]
-    if len(parts) != 4:
-        return None
     try:
+        row = next(csv.reader([line]))
+        if len(row) != 4:
+            return None
         return {
-            "time": float(parts[0]),
-            "rate": float(parts[1]),
-            "thickness": float(parts[2]),
-            "frequency": float(parts[3])
+            "time": float(row[0]),
+            "rate": float(row[1]),
+            "thickness": float(row[2]),
+            "frequency": float(row[3]),
         }
-    except ValueError:
+    except Exception:
         return None
 
-
-# --- tail 処理 ---
+# =========================
+# tail 処理（安全版）
+# =========================
 def tail_file(filepath, run_id, material, density, z_ratio, alert_threshold):
-    global logging_active, prev_alert_state
+    global prev_alert_state
 
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            f.seek(0, 2)
+        with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+            f.seek(0, os.SEEK_END)
 
-            while logging_active:
+            while logging_event.is_set():
                 line = f.readline()
                 if not line:
                     time.sleep(0.2)
                     continue
 
                 line = line.strip()
-
-                if line.startswith(("Start", "Stop", "Time")):
+                if not line or line.startswith(("Start", "Stop", "Time")):
                     continue
 
                 data = parse_csv_line(line)
@@ -93,34 +107,43 @@ def tail_file(filepath, run_id, material, density, z_ratio, alert_threshold):
                     "tags": {
                         "run_id": run_id,
                         "material": material,
-                        "density": density,
-                        "z_ratio": z_ratio
                     },
                     "fields": {
                         "time": data["time"],
                         "rate": data["rate"],
                         "thickness": data["thickness"],
-                        "frequency": data["frequency"]
+                        "frequency": data["frequency"],
+                        "density": density,
+                        "z_ratio": z_ratio,
                     }
                 }]
 
-                client.write_points(json_body)
+                try:
+                    client.write_points(json_body)
+                except Exception as e:
+                    print(f"InfluxDB write error: {e}")
 
-                alert_state = 1 if data["thickness"] >= alert_threshold else 0
+                alert_state = int(data["thickness"] >= alert_threshold)
 
                 if alert_state != prev_alert_state:
-                    client.write_points([{
-                        "measurement": "stm2_settings",
-                        "tags": {"run_id": run_id},
-                        "fields": {"last": alert_state}
-                    }])
-                    prev_alert_state = alert_state
+                    try:
+                        client.write_points([{
+                            "measurement": "stm2_settings",
+                            "tags": {"run_id": run_id},
+                            "fields": {"alert_state": alert_state}
+                        }])
+                        prev_alert_state = alert_state
+                    except Exception as e:
+                        print(f"InfluxDB alert write error: {e}")
 
     except Exception as e:
-        messagebox.showerror("エラー", f"ログ読み込み中にエラー:\n{e}")
+        gui_call(lambda: messagebox.showerror(
+            "エラー", f"ログ読み込み中にエラー:\n{e}"
+        ))
 
-
-# --- GUI 操作 ---
+# =========================
+# GUI 操作
+# =========================
 def update_material_fields(event=None):
     material = combo_material.get()
     if material in MATERIAL_DATA:
@@ -128,7 +151,6 @@ def update_material_fields(event=None):
         entry_density.insert(0, MATERIAL_DATA[material]["density"])
         entry_zratio.delete(0, "end")
         entry_zratio.insert(0, MATERIAL_DATA[material]["zratio"])
-
 
 def browse_file():
     filename = filedialog.askopenfilename(
@@ -138,88 +160,77 @@ def browse_file():
     if filename:
         entry_logfile.delete(0, "end")
         entry_logfile.insert(0, filename)
-
-        run_id = os.path.splitext(os.path.basename(filename))[0]
         entry_runid.delete(0, "end")
-        entry_runid.insert(0, run_id)
-
+        entry_runid.insert(0, os.path.splitext(os.path.basename(filename))[0])
 
 def drop_file(event):
     path = event.data.strip("{}")
     entry_logfile.delete(0, "end")
     entry_logfile.insert(0, path)
-
-    run_id = os.path.splitext(os.path.basename(path))[0]
     entry_runid.delete(0, "end")
-    entry_runid.insert(0, run_id)
-
+    entry_runid.insert(0, os.path.splitext(os.path.basename(path))[0])
 
 def start_logging():
-    global logging_active, prev_alert_state
-    logging_active = True
-    prev_alert_state = None   # ← アラート状態リセット
+    global prev_alert_state
+    prev_alert_state = None
 
-    run_id = entry_runid.get()
-    material = combo_material.get()
-
-    if not material:
-        messagebox.showerror("エラー", "Material を選択してください。")
-        logging_active = False
+    if logging_event.is_set():
         return
 
-    # Density / Z-ratio
+    material = combo_material.get()
+    if not material:
+        messagebox.showerror("エラー", "Material を選択してください。")
+        return
+
     try:
         density = float(entry_density.get())
         z_ratio = float(entry_zratio.get())
+        target_nm = float(entry_target.get())
     except ValueError:
-        messagebox.showerror("エラー", "Density または Z-ratio が正しくありません。")
-        logging_active = False
+        messagebox.showerror("エラー", "数値入力が正しくありません。")
         return
 
     logfile = entry_logfile.get()
-
-    # Target thickness (nm)
-    try:
-        target_nm = float(entry_target.get())
-    except ValueError:
-        messagebox.showerror("エラー", "目標厚さ(nm)が正しくありません。")
-        logging_active = False
-        return
-
-    # nm のまま扱う
-    target_thickness = float(target_nm)
-    alert_threshold = target_thickness * 0.8
-
-    # InfluxDB に nm のまま保存
-    client.write_points([{
-        "measurement": "stm2_settings",
-        "fields": {
-            "target_thickness": target_thickness,
-            "alert_threshold": alert_threshold
-        }
-    }])
-
     if not os.path.exists(logfile):
         messagebox.showerror("エラー", "ログファイルが存在しません。")
-        logging_active = False
         return
 
+    run_id = entry_runid.get()
+    alert_threshold = target_nm * 0.8
+
+    try:
+        client.write_points([{
+            "measurement": "stm2_settings",
+            "tags": {"run_id": run_id},
+            "fields": {
+                "target_thickness": target_nm,
+                "alert_threshold": alert_threshold
+            }
+        }])
+    except Exception as e:
+        messagebox.showerror("エラー", f"InfluxDB 初期化失敗:\n{e}")
+        return
+
+    logging_event.set()
+    btn_start.configure(state="disabled")
+    btn_stop.configure(state="normal")
     label_status.configure(text="Logging started…")
 
-    thread = threading.Thread(
+    threading.Thread(
         target=tail_file,
         args=(logfile, run_id, material, density, z_ratio, alert_threshold),
         daemon=True
-    )
-    thread.start()
-
+    ).start()
 
 def stop_logging():
-    global logging_active
-    logging_active = False
-    label_status.configure(text="Stopping…")
+    logging_event.clear()
+    btn_start.configure(state="normal")
+    btn_stop.configure(state="disabled")
+    label_status.configure(text="Stopped")
 
-# --- customtkinter GUI ---
+# =========================
+# GUI 構築
+# =========================
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
@@ -234,12 +245,10 @@ frame.pack(fill="both", expand=True, padx=20, pady=20)
 
 pad = {"padx": 10, "pady": 10}
 
-# --- Target thickness ---  row=0
 ctk.CTkLabel(frame, text="目標厚さ [nm]", font=default_font).grid(row=0, column=0, sticky="w", **pad)
 entry_target = ctk.CTkEntry(frame, width=250, font=default_font)
 entry_target.grid(row=0, column=1, **pad)
 
-# --- Material ---  row=1
 ctk.CTkLabel(frame, text="Material", font=default_font).grid(row=1, column=0, sticky="w", **pad)
 combo_material = ctk.CTkComboBox(
     frame,
@@ -251,17 +260,14 @@ combo_material = ctk.CTkComboBox(
 combo_material.set("")
 combo_material.grid(row=1, column=1, **pad)
 
-# --- Density ---  row=2
 ctk.CTkLabel(frame, text="Density", font=default_font).grid(row=2, column=0, sticky="w", **pad)
 entry_density = ctk.CTkEntry(frame, width=250, font=default_font)
 entry_density.grid(row=2, column=1, **pad)
 
-# --- Z-ratio ---  row=3
 ctk.CTkLabel(frame, text="Z-ratio", font=default_font).grid(row=3, column=0, sticky="w", **pad)
 entry_zratio = ctk.CTkEntry(frame, width=250, font=default_font)
 entry_zratio.grid(row=3, column=1, **pad)
 
-# --- Log file ---  row=4
 ctk.CTkLabel(frame, text="ログファイル", font=default_font).grid(row=4, column=0, sticky="w", **pad)
 entry_logfile = ctk.CTkEntry(frame, width=250, font=default_font)
 entry_logfile.grid(row=4, column=1, **pad)
@@ -272,20 +278,20 @@ entry_logfile.dnd_bind("<<Drop>>", drop_file)
 btn_browse = ctk.CTkButton(frame, text="参照", command=browse_file, width=120, font=default_font)
 btn_browse.grid(row=4, column=2, **pad)
 
-# --- Run ID ---  row=5
 ctk.CTkLabel(frame, text="Run ID", font=default_font).grid(row=5, column=0, sticky="w", **pad)
 entry_runid = ctk.CTkEntry(frame, width=250, font=default_font)
 entry_runid.grid(row=5, column=1, **pad)
 
-# --- Buttons ---  row=6
 btn_start = ctk.CTkButton(frame, text="Start Logging", command=start_logging, width=200, font=default_font)
 btn_start.grid(row=6, column=0, **pad)
 
 btn_stop = ctk.CTkButton(frame, text="Stop Logging", command=stop_logging, width=200, font=default_font)
 btn_stop.grid(row=6, column=1, **pad)
+btn_stop.configure(state="disabled")
 
-# --- Status ---  row=7
 label_status = ctk.CTkLabel(frame, text="Waiting…", font=default_font)
 label_status.grid(row=7, column=0, columnspan=3, **pad)
+
 root.mainloop()
+
 
