@@ -20,7 +20,7 @@ Windows Defender ファイアウォールに受信規則を追加してポート
 固定IPアドレスを設定する。あらかじめネットワーク管理者に確認することをおすすめします。 
 
 ### Pythonをインストール  
-**公式サイト：** https://www.python.org/  
+公式サイト： <a href="https://www.python.org/" target="blank">https://www.python.org/</a>  
 
 コマンドプロンプトで下記の三つのコマンドを実行して必要なライブラリをインストールする。  
 
@@ -29,11 +29,11 @@ pip install customtkinter
 pip install tkinterdnd2  
 
 ### InfluxDBをインストール  
-**公式サイト：** https://www.influxdata.com/  
+公式サイト： <a href="https://www.influxdata.com/" target="blank">https://www.influxdata.com/</a>     
 STM-2 のログスクリプトとの互換性のため、InfluxDB v1.x を推奨します。  
 
 ### Grafanaをインストール  
-**公式サイト：** https://grafana.com/ 
+公式サイト： <a href="https://grafana.com/" target="_blank"> https://grafana.com/ </a>
 
 "STM-2_dashboard.json" をインポートして各種設定を完了させる。  
 - Grafana → Dashboards → Import  
