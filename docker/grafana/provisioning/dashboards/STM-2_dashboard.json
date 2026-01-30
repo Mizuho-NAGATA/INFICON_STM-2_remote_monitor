@@ -34,9 +34,14 @@
           "mappings": [
             {
               "options": {
-                " 1": {
-                  "color": "dark-red",
+                "0": {
+                  "color": "green",
                   "index": 0,
+                  "text": "正常"
+                },
+                "1": {
+                  "color": "dark-red",
+                  "index": 1,
                   "text": "目標厚さの80％を超えました"
                 }
               },
@@ -57,30 +62,7 @@
             ]
           }
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "stm2_settings.last"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "1": {
-                        "index": 0,
-                        "text": "目標厚さの80%を超えました"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
@@ -96,10 +78,8 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^stm2_settings\\.last$/",
+          "calcs": ["lastNotNull"],
+          "fields": "",
           "values": false
         },
         "showPercentChange": false,
@@ -111,36 +91,30 @@
         {
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "null"
-              ],
+              "params": ["null"],
               "type": "fill"
             }
           ],
           "measurement": "stm2_settings",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"last\") FROM \"stm2_settings\"",
+          "query": "SELECT last(\"alert_state\") FROM \"stm2_settings\" WHERE $timeFilter",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
             [
               {
-                "params": [
-                  "value"
-                ],
+                "params": ["alert_state"],
                 "type": "field"
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "last"
               }
             ]
           ],
@@ -191,9 +165,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -206,15 +178,11 @@
         {
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "null"
-              ],
+              "params": ["null"],
               "type": "fill"
             }
           ],
@@ -226,9 +194,7 @@
           "select": [
             [
               {
-                "params": [
-                  "thickness"
-                ],
+                "params": ["thickness"],
                 "type": "field"
               },
               {
@@ -296,9 +262,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -309,7 +273,7 @@
       "pluginVersion": "12.3.1",
       "targets": [
         {
-          "query": "SELECT last(\"target_thickness\") FROM \"stm2_settings\"",
+          "query": "SELECT last(\"target_thickness\") FROM \"stm2_settings\" WHERE $timeFilter",
           "rawQuery": true,
           "refId": "A",
           "resultFormat": "time_series"
@@ -359,9 +323,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -378,15 +340,11 @@
           },
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "null"
-              ],
+              "params": ["null"],
               "type": "fill"
             }
           ],
@@ -398,9 +356,7 @@
           "select": [
             [
               {
-                "params": [
-                  "rate"
-                ],
+                "params": ["rate"],
                 "type": "field"
               },
               {
@@ -474,21 +430,15 @@
         {
           "groupBy": [
             {
-              "params": [
-                "material::tag"
-              ],
+              "params": ["material::tag"],
               "type": "tag"
             },
             {
-              "params": [
-                "density::tag"
-              ],
+              "params": ["density::tag"],
               "type": "tag"
             },
             {
-              "params": [
-                "z_ratio::tag"
-              ],
+              "params": ["z_ratio::tag"],
               "type": "tag"
             }
           ],
@@ -500,9 +450,27 @@
           "select": [
             [
               {
-                "params": [
-                  "thickness"
-                ],
+                "params": ["thickness"],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ],
+            [
+              {
+                "params": ["rate"],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ],
+            [
+              {
+                "params": ["frequency"],
                 "type": "field"
               },
               {
@@ -581,9 +549,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -596,15 +562,11 @@
         {
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "null"
-              ],
+              "params": ["null"],
               "type": "fill"
             }
           ],
@@ -618,9 +580,7 @@
           "select": [
             [
               {
-                "params": [
-                  "frequency"
-                ],
+                "params": ["frequency"],
                 "type": "field"
               },
               {
