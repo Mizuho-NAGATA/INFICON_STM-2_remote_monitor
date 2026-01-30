@@ -2,7 +2,7 @@
 # 本ソフトウェアは Microsoft Copilot を活用して開発されました。
 # Copyright (c) 2026 NAGATA Mizuho. Institute of Laser Engineering, Osaka University.
 # Created on: 2026-01-20
-# Last updated on: 2026-01-26
+# Last updated on: 2026-01-23
 #
 # pip install influxdb
 # pip install customtkinter
@@ -58,7 +58,7 @@ def parse_csv_line(line):
         return {
             "time": float(parts[0]),
             "rate": float(parts[1]),
-            "thickness": float(parts[2]),
+            "thickness": float(parts[2]),   # Å（生データ）
             "frequency": float(parts[3])
         }
     except ValueError:
@@ -66,7 +66,7 @@ def parse_csv_line(line):
 
 
 # --- tail 処理 ---
-def tail_file(filepath, run_id, material, density, z_ratio, alert_threshold):
+def tail_file(filepath, run_id, material, density, z_ratio, alert_threshold_nm):
     global logging_active, prev_alert_state
 
     try:
@@ -88,6 +88,9 @@ def tail_file(filepath, run_id, material, density, z_ratio, alert_threshold):
                 if not data:
                     continue
 
+                # --- Å → nm に変換 ---
+                thickness_nm = data["thickness"] / 10.0
+
                 json_body = [{
                     "measurement": "stm2",
                     "tags": {
@@ -99,14 +102,15 @@ def tail_file(filepath, run_id, material, density, z_ratio, alert_threshold):
                     "fields": {
                         "time": data["time"],
                         "rate": data["rate"],
-                        "thickness": data["thickness"],
+                        "thickness": thickness_nm,   # nm で保存
                         "frequency": data["frequency"]
                     }
                 }]
 
                 client.write_points(json_body)
 
-                alert_state = 1 if data["thickness"] >= alert_threshold else 0
+                # --- アラート判定（nmベース） ---
+                alert_state = 1 if thickness_nm >= alert_threshold_nm else 0
 
                 if alert_state != prev_alert_state:
                     client.write_points([{
@@ -155,9 +159,8 @@ def drop_file(event):
 
 
 def start_logging():
-    global logging_active, prev_alert_state
+    global logging_active
     logging_active = True
-    prev_alert_state = None   # ← ここでリセット
 
     run_id = entry_runid.get()
     material = combo_material.get()
@@ -184,14 +187,16 @@ def start_logging():
         logging_active = False
         return
 
-    target_angstrom = target_nm * 10.0
-    alert_threshold = target_angstrom * 0.8
+    # --- nm のまま扱う ---
+    target_nm_value = target_nm
+    alert_threshold_nm = target_nm_value * 0.8
 
+    # --- InfluxDB に nm のまま保存 ---
     client.write_points([{
         "measurement": "stm2_settings",
         "fields": {
-            "target_thickness": target_angstrom,
-            "alert_threshold": alert_threshold
+            "target_thickness": target_nm_value,
+            "alert_threshold": alert_threshold_nm
         }
     }])
 
@@ -204,7 +209,7 @@ def start_logging():
 
     thread = threading.Thread(
         target=tail_file,
-        args=(logfile, run_id, material, density, z_ratio, alert_threshold),
+        args=(logfile, run_id, material, density, z_ratio, alert_threshold_nm),
         daemon=True
     )
     thread.start()
@@ -214,6 +219,7 @@ def stop_logging():
     global logging_active
     logging_active = False
     label_status.configure(text="Stopping…")
+
 
 # --- customtkinter GUI ---
 ctk.set_appearance_mode("dark")
@@ -230,13 +236,14 @@ frame.pack(fill="both", expand=True, padx=20, pady=20)
 
 pad = {"padx": 10, "pady": 10}
 
-# --- Target thickness ---  row=0
-ctk.CTkLabel(frame, text="目標厚さ [nm]", font=default_font).grid(row=0, column=0, sticky="w", **pad)
-entry_target = ctk.CTkEntry(frame, width=250, font=default_font)
-entry_target.grid(row=0, column=1, **pad)
+# --- Run ID ---
+ctk.CTkLabel(frame, text="Run ID", font=default_font).grid(row=0, column=0, sticky="w", **pad)
+entry_runid = ctk.CTkEntry(frame, width=250, font=default_font)
+entry_runid.grid(row=0, column=1, **pad)
 
-# --- Material ---  row=1
+# --- Material ---
 ctk.CTkLabel(frame, text="Material", font=default_font).grid(row=1, column=0, sticky="w", **pad)
+
 combo_material = ctk.CTkComboBox(
     frame,
     values=list(MATERIAL_DATA.keys()),
@@ -247,17 +254,17 @@ combo_material = ctk.CTkComboBox(
 combo_material.set("")
 combo_material.grid(row=1, column=1, **pad)
 
-# --- Density ---  row=2
+# --- Density ---
 ctk.CTkLabel(frame, text="Density", font=default_font).grid(row=2, column=0, sticky="w", **pad)
 entry_density = ctk.CTkEntry(frame, width=250, font=default_font)
 entry_density.grid(row=2, column=1, **pad)
 
-# --- Z-ratio ---  row=3
+# --- Z-ratio ---
 ctk.CTkLabel(frame, text="Z-ratio", font=default_font).grid(row=3, column=0, sticky="w", **pad)
 entry_zratio = ctk.CTkEntry(frame, width=250, font=default_font)
 entry_zratio.grid(row=3, column=1, **pad)
 
-# --- Log file ---  row=4
+# --- Log file ---
 ctk.CTkLabel(frame, text="ログファイル", font=default_font).grid(row=4, column=0, sticky="w", **pad)
 entry_logfile = ctk.CTkEntry(frame, width=250, font=default_font)
 entry_logfile.grid(row=4, column=1, **pad)
@@ -268,19 +275,20 @@ entry_logfile.dnd_bind("<<Drop>>", drop_file)
 btn_browse = ctk.CTkButton(frame, text="参照", command=browse_file, width=120, font=default_font)
 btn_browse.grid(row=4, column=2, **pad)
 
-# --- Run ID ---  row=5
-ctk.CTkLabel(frame, text="Run ID", font=default_font).grid(row=5, column=0, sticky="w", **pad)
-entry_runid = ctk.CTkEntry(frame, width=250, font=default_font)
-entry_runid.grid(row=5, column=1, **pad)
+# --- Target thickness ---
+ctk.CTkLabel(frame, text="目標厚さ [nm]", font=default_font).grid(row=5, column=0, sticky="w", **pad)
+entry_target = ctk.CTkEntry(frame, width=250, font=default_font)
+entry_target.grid(row=5, column=1, **pad)
 
-# --- Buttons ---  row=6
+# --- Buttons ---
 btn_start = ctk.CTkButton(frame, text="Start Logging", command=start_logging, width=200, font=default_font)
 btn_start.grid(row=6, column=0, **pad)
 
 btn_stop = ctk.CTkButton(frame, text="Stop Logging", command=stop_logging, width=200, font=default_font)
 btn_stop.grid(row=6, column=1, **pad)
 
-# --- Status ---  row=7
+# --- Status ---
 label_status = ctk.CTkLabel(frame, text="Waiting…", font=default_font)
 label_status.grid(row=7, column=0, columnspan=3, **pad)
+
 root.mainloop()
