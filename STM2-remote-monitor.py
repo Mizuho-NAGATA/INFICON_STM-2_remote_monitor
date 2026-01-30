@@ -157,7 +157,7 @@ def drop_file(event):
 def start_logging():
     global logging_active, prev_alert_state
     logging_active = True
-    prev_alert_state = None   # ← ここでリセット
+    prev_alert_state = None   # ← アラート状態リセット
 
     run_id = entry_runid.get()
     material = combo_material.get()
@@ -167,6 +167,7 @@ def start_logging():
         logging_active = False
         return
 
+    # Density / Z-ratio
     try:
         density = float(entry_density.get())
         z_ratio = float(entry_zratio.get())
@@ -177,6 +178,7 @@ def start_logging():
 
     logfile = entry_logfile.get()
 
+    # Target thickness (nm)
     try:
         target_nm = float(entry_target.get())
     except ValueError:
@@ -184,13 +186,15 @@ def start_logging():
         logging_active = False
         return
 
-    target_angstrom = target_nm * 10.0
-    alert_threshold = target_angstrom * 0.8
+    # nm のまま扱う
+    target_thickness = float(target_nm)
+    alert_threshold = target_thickness * 0.8
 
+    # InfluxDB に nm のまま保存
     client.write_points([{
         "measurement": "stm2_settings",
         "fields": {
-            "target_thickness": target_angstrom,
+            "target_thickness": target_thickness,
             "alert_threshold": alert_threshold
         }
     }])
@@ -284,3 +288,4 @@ btn_stop.grid(row=6, column=1, **pad)
 label_status = ctk.CTkLabel(frame, text="Waiting…", font=default_font)
 label_status.grid(row=7, column=0, columnspan=3, **pad)
 root.mainloop()
+
