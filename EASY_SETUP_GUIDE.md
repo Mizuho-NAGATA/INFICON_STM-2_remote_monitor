@@ -1,5 +1,18 @@
-# 📊 STM-2 遠隔監視システム
+# 📊 INFICON STM-2 リアルタイム遠隔監視システム
 ![外部向け説明資料](https://github.com/user-attachments/assets/eb5fce0c-8dbf-4847-b3d2-5c2d21164ab5)
+**注意：このプログラムはINFICON社の公式なものではありません。**  
+**Note: This program is not official INFICON.**  
+
+本システムで使用する物性値について、正確性を保証するものではありません。利用により生じたいかなる結果についても、作者は責任を負いません。  
+電子ビーム蒸着装置に取り付けられたSTM-2を想定して作成。  
+
+## ✨ 特長
+
+- STM-2 の膜厚・成膜レート・周波数をリアルタイム監視
+- ネットワーク経由での多地点同時監視
+- 目標膜厚の 80% を超えた際に自動アラート
+- Docker の完全統合により環境構築が一切不要  
+
 ---
 # 📊 簡単セットアップガイド
 ## 🚀 **1分で理解！簡単3ステップ**
@@ -223,5 +236,6 @@ Institute of Laser Engineering, Osaka University
 
 
 **🎉 準備完了！ Let's Start Monitoring! 🎉**
+
 
 
