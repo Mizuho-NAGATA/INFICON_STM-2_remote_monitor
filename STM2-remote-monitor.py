@@ -27,6 +27,13 @@ from influxdb import InfluxDBClient
 from tkinterdnd2 import DND_FILES, TkinterDnD
 
 # --- 材料データ ---
+# MATERIAL_DATA の出典
+# 密度（Density）:
+#   （株）高純度化学研究所 サポートブック 2022〜 ・Webサイト
+# Z-RATIO:
+#   ・水晶発振式成膜コントローラ説明書（2005/09/30）p.62〜63
+#   ・元素周期表
+#   ・INFICON STM-2 説明書 A-1〜
 MATERIAL_DATA = {
     "Al": {"density": 2.699, "zratio": 1.08},
     "Au": {"density": 19.320, "zratio": 0.381},
@@ -363,3 +370,4 @@ btn_stop.grid(row=6, column=1, **pad)
 label_status = ctk.CTkLabel(frame, text="Waiting…", font=default_font)
 label_status.grid(row=7, column=0, columnspan=3, **pad)
 root.mainloop()
+
