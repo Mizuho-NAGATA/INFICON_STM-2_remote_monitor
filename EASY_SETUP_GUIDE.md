@@ -1,7 +1,7 @@
-# 📊 STM-2 監視システム - 簡単セットアップガイド
-
+# 📊 STM-2 遠隔監視システム
+![外部向け説明資料](https://github.com/user-attachments/assets/eb5fce0c-8dbf-4847-b3d2-5c2d21164ab5)
 ---
-
+# 📊 簡単セットアップガイド
 ## 🚀 **1分で理解！簡単3ステップ**
 
 ```
@@ -223,4 +223,5 @@ Institute of Laser Engineering, Osaka University
 
 
 **🎉 準備完了！ Let's Start Monitoring! 🎉**
+
 
