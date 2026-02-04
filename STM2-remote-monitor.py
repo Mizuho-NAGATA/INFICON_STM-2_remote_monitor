@@ -116,16 +116,16 @@ class STM2Logger:
                         {
                             "measurement": "stm2",
                             "tags": {
-                                "run_id": run_id, 
-                                "material": material},
-                                "density": density,
-                                "z_ratio": z_ratio,
+                                "run_id": run_id,
+                                "material": material,
+                                "density": str(density),   # tag は文字列
+                                "z_ratio": str(z_ratio),   # tag は文字列
                             },
                             "fields": {
                                 "time": data["time"],
                                 "rate": data["rate"],
                                 "thickness": data["thickness"],
-                                "frequency": data["frequency"],                                
+                                "frequency": data["frequency"],
                             },
                         }
                     ]
@@ -422,6 +422,7 @@ class STM2LoggerGUI:
 if __name__ == "__main__":
     gui = STM2LoggerGUI()
     gui.run()
+
 
 
 
