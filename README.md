@@ -67,6 +67,8 @@ STM-2 のログスクリプトとの互換性のため、InfluxDB v1.x を推奨
 - 蒸着材料を選択 → **密度・Z‑ratio が自動入力**  
 - 「参照」ボタンから **STM‑2 のログファイル（現在記録中のもの）** を選択  
 - GUI が InfluxDB にデータを書き込み始める
+![GUI](https://github.com/user-attachments/assets/0c668087-c73f-4ab3-9ee0-d0cd39099132)
+
 
 ---
 
