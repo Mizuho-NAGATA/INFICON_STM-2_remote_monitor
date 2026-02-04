@@ -59,23 +59,23 @@ class STM2Logger:
     # ----------------------------
     # CSV 1行パース
     # ----------------------------
-    def parse_csv_line(line):
-    try:
-        row = next(csv.reader([line]))
-        # 末尾の空要素を削除
-        row = [x for x in row if x.strip() != ""]
+    def parse_csv_line(self, line):
+        try:
+            row = next(csv.reader([line]))
+            # 末尾の空要素を削除
+            row = [x for x in row if x.strip() != ""]
 
-        if len(row) != 4:
+            if len(row) != 4:
+                return None
+
+            return {
+                "time": float(row[0]),
+                "rate": float(row[1]),
+                "thickness": float(row[2]),
+                "frequency": float(row[3]),
+            }
+        except Exception:
             return None
-
-        return {
-            "time": float(row[0]),
-            "rate": float(row[1]),
-            "thickness": float(row[2]),
-            "frequency": float(row[3]),
-        }
-    except Exception:
-        return None
 
     # ----------------------------
     # tail スレッド
@@ -419,5 +419,6 @@ class STM2LoggerGUI:
 if __name__ == "__main__":
     gui = STM2LoggerGUI()
     gui.run()
+
 
 
