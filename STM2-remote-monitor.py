@@ -62,8 +62,6 @@ class STM2Logger:
     def parse_csv_line(self, line):
         try:
             row = next(csv.reader([line]))
-
-            # 末尾の空要素を削除（STM-2ログは最後にカンマが付く）
             row = [x for x in row if x.strip() != ""]
 
             if len(row) != 4:
@@ -81,7 +79,16 @@ class STM2Logger:
     # ----------------------------
     # tail スレッド
     # ----------------------------
-    def tail_file(self, filepath, run_id, material, density, z_ratio, alert_threshold, callback=None):
+    def tail_file(
+        self,
+        filepath,
+        run_id,
+        material,
+        density,
+        z_ratio,
+        alert_threshold,
+        callback=None,
+    ):
 
         if run_id not in self.prev_alert_state:
             self.prev_alert_state[run_id] = None
@@ -92,11 +99,13 @@ class STM2Logger:
 
                 while not self.stop_event.is_set():
                     line = f.readline()
+
                     if not line:
                         time.sleep(0.2)
                         continue
 
                     line = line.strip()
+
                     if not line or line.startswith(("Start", "Stop", "Time")):
                         continue
 
@@ -131,24 +140,27 @@ class STM2Logger:
                         print(f"InfluxDB write error: {e}")
 
                     # ----------------------------
-                    # アラート判定
+                    # アラート判定 毎回書き込み
                     # ----------------------------
                     alert_state = int(data["thickness"] >= alert_threshold)
 
-                    if alert_state != self.prev_alert_state[run_id]:
-                        try:
-                            self.client.write_points([
+                    try:
+                        self.client.write_points(
+                            [
                                 {
                                     "measurement": "stm2_settings",
                                     "tags": {"run_id": run_id},
-                                    "fields": {"alert_state": alert_state}
+                                    "fields": {"alert_state": alert_state},
                                 }
-                            ])
-                            self.prev_alert_state[run_id] = alert_state
-                        except Exception as e:
-                            print(f"InfluxDB alert write error: {e}")
+                            ]
+                        )
+                    except Exception as e:
+                        print(f"InfluxDB alert write error: {e}")
 
-                    # GUI 更新コールバック
+                    # GUI通知は変化時のみ
+                    if alert_state != self.prev_alert_state[run_id]:
+                        self.prev_alert_state[run_id] = alert_state
+
                     if callback:
                         callback(data)
 
@@ -159,30 +171,41 @@ class STM2Logger:
     # ----------------------------
     # ログ監視開始
     # ----------------------------
-    def start(self, filepath, run_id, material, density, z_ratio, target_nm, callback=None):
+    def start(
+        self, filepath, run_id, material, density, z_ratio, target_nm, callback=None
+    ):
+
         self.stop_event.clear()
         alert_threshold = target_nm * 0.8
 
-        # 初期設定を InfluxDB に書き込み
         try:
-            self.client.write_points([
-                {
-                    "measurement": "stm2_settings",
-                    "tags": {"run_id": run_id},
-                    "fields": {
-                        "target_thickness": target_nm,
-                        "alert_threshold": alert_threshold
+            self.client.write_points(
+                [
+                    {
+                        "measurement": "stm2_settings",
+                        "tags": {"run_id": run_id},
+                        "fields": {
+                            "target_thickness": target_nm,
+                            "alert_threshold": alert_threshold,
+                        },
                     }
-                }
-            ])
+                ]
+            )
         except Exception as e:
             raise RuntimeError(f"InfluxDB 初期化失敗: {e}")
 
-        # スレッド開始
         self.thread = threading.Thread(
             target=self.tail_file,
-            args=(filepath, run_id, material, density, z_ratio, alert_threshold, callback),
-            daemon=True
+            args=(
+                filepath,
+                run_id,
+                material,
+                density,
+                z_ratio,
+                alert_threshold,
+                callback,
+            ),
+            daemon=True,
         )
         self.thread.start()
 
@@ -208,7 +231,6 @@ class STM2LoggerGUI:
         self.root.geometry("700x650")
 
         self.logger = STM2Logger()
-
         self.build_gui()
 
     # ----------------------------
@@ -220,14 +242,12 @@ class STM2LoggerGUI:
         frame.pack(fill="both", expand=True, padx=20, pady=20)
         pad = {"padx": 10, "pady": 10}
 
-        # 目標厚さ
         ctk.CTkLabel(frame, text="目標厚さ [nm]", font=default_font).grid(
             row=0, column=0, sticky="w", **pad
         )
         self.entry_target = ctk.CTkEntry(frame, width=250, font=default_font)
         self.entry_target.grid(row=0, column=1, **pad)
 
-        # Material
         ctk.CTkLabel(frame, text="Material", font=default_font).grid(
             row=1, column=0, sticky="w", **pad
         )
@@ -238,24 +258,20 @@ class STM2LoggerGUI:
             font=default_font,
             command=self.update_material_fields,
         )
-        self.combo_material.set("")
         self.combo_material.grid(row=1, column=1, **pad)
 
-        # Density
         ctk.CTkLabel(frame, text="Density", font=default_font).grid(
             row=2, column=0, sticky="w", **pad
         )
         self.entry_density = ctk.CTkEntry(frame, width=250, font=default_font)
         self.entry_density.grid(row=2, column=1, **pad)
 
-        # Z-ratio
         ctk.CTkLabel(frame, text="Z-ratio", font=default_font).grid(
             row=3, column=0, sticky="w", **pad
         )
         self.entry_zratio = ctk.CTkEntry(frame, width=250, font=default_font)
         self.entry_zratio.grid(row=3, column=1, **pad)
 
-        # ログファイル
         ctk.CTkLabel(frame, text="ログファイル", font=default_font).grid(
             row=4, column=0, sticky="w", **pad
         )
@@ -270,14 +286,12 @@ class STM2LoggerGUI:
         )
         btn_browse.grid(row=4, column=2, **pad)
 
-        # Run ID
         ctk.CTkLabel(frame, text="Run ID", font=default_font).grid(
             row=5, column=0, sticky="w", **pad
         )
         self.entry_runid = ctk.CTkEntry(frame, width=250, font=default_font)
         self.entry_runid.grid(row=5, column=1, **pad)
 
-        # Start / Stop
         self.btn_start = ctk.CTkButton(
             frame,
             text="Start Logging",
@@ -297,7 +311,6 @@ class STM2LoggerGUI:
         self.btn_stop.grid(row=6, column=1, **pad)
         self.btn_stop.configure(state="disabled")
 
-        # Status
         self.label_status = ctk.CTkLabel(frame, text="Waiting…", font=default_font)
         self.label_status.grid(row=7, column=0, columnspan=3, **pad)
 
@@ -407,10 +420,3 @@ class STM2LoggerGUI:
 if __name__ == "__main__":
     gui = STM2LoggerGUI()
     gui.run()
-
-
-
-
-
-
-
