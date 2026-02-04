@@ -115,14 +115,17 @@ class STM2Logger:
                     json_body = [
                         {
                             "measurement": "stm2",
-                            "tags": {"run_id": run_id, "material": material},
+                            "tags": {
+                                "run_id": run_id, 
+                                "material": material},
+                                "density": density,
+                                "z_ratio": z_ratio,
+                            },
                             "fields": {
                                 "time": data["time"],
                                 "rate": data["rate"],
                                 "thickness": data["thickness"],
-                                "frequency": data["frequency"],
-                                "density": density,
-                                "z_ratio": z_ratio,
+                                "frequency": data["frequency"],                                
                             },
                         }
                     ]
@@ -419,6 +422,7 @@ class STM2LoggerGUI:
 if __name__ == "__main__":
     gui = STM2LoggerGUI()
     gui.run()
+
 
 
 
