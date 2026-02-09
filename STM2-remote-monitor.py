@@ -114,7 +114,7 @@ class STM2Logger:
                         continue
 
                     # ----------------------------
-                    # InfluxDB 書き込み（density / z_ratio を tag 化）
+                    # InfluxDB 書き込み
                     # ----------------------------
                     json_body = [
                         {
@@ -140,27 +140,34 @@ class STM2Logger:
                         print(f"InfluxDB write error: {e}")
 
                     # ----------------------------
-                    # アラート判定
-                    # ----------------------------
-                    # ----------------------------
                     # アラート判定（毎秒書き込み）
                     # ----------------------------
                     alert_state = int(data["thickness"] >= alert_threshold)
 
                     try:
-                        self.client.write_points([
-                            {
-                                "measurement": "stm2_settings",
-                                "tags": {"run_id": run_id},
-                                "fields": {
-                                    "alert_state": alert_state,
-                                    "current_thickness": data["thickness"],
-                                    "alert_threshold": alert_threshold
+                        self.client.write_points(
+                            [
+                                {
+                                    "measurement": "stm2_settings",
+                                    "tags": {"run_id": run_id},
+                                    "fields": {
+                                        "alert_state": alert_state,
+                                        "current_thickness": data["thickness"],
+                                        "alert_threshold": alert_threshold,
+                                    },
                                 }
-                            }
-                        ])
+                            ]
+                        )
                     except Exception as e:
                         print(f"InfluxDB alert write error: {e}")
+
+                    # GUI 更新
+                    if callback:
+                        callback(data)
+
+        except Exception as e:
+            if callback:
+                callback({"error": str(e)})
 
     # ----------------------------
     # ログ監視開始
@@ -425,4 +432,3 @@ class STM2LoggerGUI:
 if __name__ == "__main__":
     gui = STM2LoggerGUI()
     gui.run()
-
