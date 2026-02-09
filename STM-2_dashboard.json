@@ -84,7 +84,6 @@
       "pluginVersion": "12.3.1",
       "targets": [
         {
-          "alias": "thickness",
           "datasource": {
             "type": "influxdb",
             "uid": "ffa7izoai6m80b"
@@ -94,40 +93,12 @@
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
-          "resultFormat": "table",
+          "resultFormat": "time_series",
           "select": [
             [
               {
                 "params": [
-                  "thickness"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "target",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "ffa7izoai6m80b"
-          },
-          "groupBy": [],
-          "measurement": "stm2_settings",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "B",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "target_thickness"
+                  "progress_percentage"
                 ],
                 "type": "field"
               },
@@ -141,56 +112,6 @@
         }
       ],
       "title": "⚠️ Target Progress Alert",
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {}
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "indexByName": {},
-            "renameByName": {
-              "last": "thickness_value",
-              "last_1": "target_value"
-            }
-          }
-        },
-        {
-          "id": "calculateField",
-          "options": {
-            "alias": "Percentage",
-            "binary": {
-              "left": "thickness_value",
-              "operator": "/",
-              "right": "target_value"
-            },
-            "mode": "binary",
-            "reduce": {
-              "reducer": "sum"
-            }
-          }
-        },
-        {
-          "id": "calculateField",
-          "options": {
-            "alias": "Progress",
-            "binary": {
-              "left": "Percentage",
-              "operator": "*",
-              "right": "100"
-            },
-            "mode": "binary",
-            "reduce": {
-              "reducer": "sum"
-            },
-            "replaceFields": true
-          }
-        }
-      ],
       "type": "stat"
     },
     {

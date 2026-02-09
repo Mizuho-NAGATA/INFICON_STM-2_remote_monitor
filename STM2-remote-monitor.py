@@ -81,7 +81,7 @@ class STM2Logger:
     # ----------------------------
     # tail スレッド
     # ----------------------------
-    def tail_file(self, filepath, run_id, material, density, z_ratio, alert_threshold, callback=None):
+    def tail_file(self, filepath, run_id, material, density, z_ratio, alert_threshold, target_nm, callback=None):
 
         if run_id not in self.prev_alert_state:
             self.prev_alert_state[run_id] = None
@@ -107,6 +107,9 @@ class STM2Logger:
                     # ----------------------------
                     # InfluxDB 書き込み（density / z_ratio を tag 化）
                     # ----------------------------
+                    # パーセンテージ計算
+                    progress_percentage = (data["thickness"] / target_nm) * 100 if target_nm > 0 else 0
+                    
                     json_body = [
                         {
                             "measurement": "stm2",
@@ -121,6 +124,7 @@ class STM2Logger:
                                 "rate": data["rate"],
                                 "thickness": data["thickness"],
                                 "frequency": data["frequency"],
+                                "progress_percentage": progress_percentage,
                             },
                         }
                     ]
@@ -181,7 +185,7 @@ class STM2Logger:
         # スレッド開始
         self.thread = threading.Thread(
             target=self.tail_file,
-            args=(filepath, run_id, material, density, z_ratio, alert_threshold, callback),
+            args=(filepath, run_id, material, density, z_ratio, alert_threshold, target_nm, callback),
             daemon=True
         )
         self.thread.start()
