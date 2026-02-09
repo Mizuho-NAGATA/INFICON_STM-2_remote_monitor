@@ -17,7 +17,7 @@
 ![keikoku](https://github.com/user-attachments/assets/13df291b-82ce-4b08-9643-8e03dbeeca35)
 
 ## STM-2接続パソコンの準備：
-Windowsマシンを想定しています。  
+Windows の場合   
 Windows Defender ファイアウォールに受信規則を追加してポート3000を開放する。  
 固定IPアドレスを設定する。あらかじめネットワーク管理者に確認することをおすすめします。 
 
