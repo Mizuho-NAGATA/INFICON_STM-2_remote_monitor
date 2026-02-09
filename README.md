@@ -17,25 +17,143 @@
 ![keikoku](https://github.com/user-attachments/assets/13df291b-82ce-4b08-9643-8e03dbeeca35)
 
 ## STM-2接続パソコンの準備：
-Windows の場合   
+
+### 🪟 Windows の場合
 Windows Defender ファイアウォールに受信規則を追加してポート3000を開放する。  
 固定IPアドレスを設定する。あらかじめネットワーク管理者に確認することをおすすめします。 
 
-### Pythonをインストール  
+#### Pythonをインストール  
 公式サイト： <a href="https://www.python.org/" target="blank">https://www.python.org/</a>  
 
-コマンドプロンプトで下記の三つのコマンドを実行して必要なライブラリをインストールする。  
+コマンドプロンプトで下記のコマンドを実行して必要なライブラリをインストールする。  
+```cmd
+pip install influxdb customtkinter tkinterdnd2
+```
 
-pip install influxdb  
-pip install customtkinter  
-pip install tkinterdnd2  
+または requirements.txt を使用：
+```cmd
+pip install -r requirements.txt
+```
 
-### InfluxDBをインストール  
+#### InfluxDBをインストール  
 公式サイト： <a href="https://www.influxdata.com/" target="blank">https://www.influxdata.com/</a>     
 STM-2 のログスクリプトとの互換性のため、InfluxDB v1.x を推奨します。  
 
-### Grafanaをインストール  
+#### Grafanaをインストール  
 公式サイト： <a href="https://grafana.com/" target="_blank"> https://grafana.com/ </a>
+
+"STM-2_dashboard.json" をインポートして各種設定を完了させる。  
+- Grafana → Dashboards → Import  
+- JSON Upload または JSON を貼り付け  
+- Data source を InfluxDB に設定  
+
+---
+
+### 🍎 macOS の場合
+ファイアウォール設定でポート3000を開放する。  
+固定IPアドレスを設定する。あらかじめネットワーク管理者に確認することをおすすめします。
+
+#### Pythonをインストール  
+公式サイト： <a href="https://www.python.org/" target="blank">https://www.python.org/</a>  
+または Homebrew を使用：
+```bash
+brew install python3
+```
+
+ターミナルで下記のコマンドを実行して必要なライブラリをインストールする。  
+```bash
+pip3 install influxdb customtkinter tkinterdnd2
+```
+
+または requirements.txt を使用：
+```bash
+pip3 install -r requirements.txt
+```
+
+#### InfluxDBをインストール  
+Homebrew を使用してインストール：
+```bash
+brew install influxdb@1
+brew services start influxdb@1
+```
+
+または公式サイト： <a href="https://www.influxdata.com/" target="blank">https://www.influxdata.com/</a>  
+
+#### Grafanaをインストール  
+Homebrew を使用してインストール：
+```bash
+brew install grafana
+brew services start grafana
+```
+
+または公式サイト： <a href="https://grafana.com/" target="_blank"> https://grafana.com/ </a>
+
+"STM-2_dashboard.json" をインポートして各種設定を完了させる。  
+- Grafana → Dashboards → Import  
+- JSON Upload または JSON を貼り付け  
+- Data source を InfluxDB に設定  
+
+---
+
+### 🐧 Linux の場合
+ファイアウォール設定（iptables または firewalld）でポート3000を開放する。  
+固定IPアドレスを設定する。あらかじめネットワーク管理者に確認することをおすすめします。
+
+#### Pythonをインストール  
+多くの Linux ディストリビューションには Python3 がプリインストールされています。  
+未インストールの場合：
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install python3 python3-pip
+
+# Fedora/RHEL/CentOS
+sudo dnf install python3 python3-pip
+```
+
+ターミナルで下記のコマンドを実行して必要なライブラリをインストールする。  
+```bash
+pip3 install influxdb customtkinter tkinterdnd2
+```
+
+または requirements.txt を使用：
+```bash
+pip3 install -r requirements.txt
+```
+
+**注意**: 日本語フォントが必要です。未インストールの場合：
+```bash
+# Ubuntu/Debian
+sudo apt install fonts-noto-cjk
+
+# Fedora/RHEL/CentOS
+sudo dnf install google-noto-sans-cjk-jp-fonts
+```
+
+#### InfluxDBをインストール  
+公式サイトの手順に従ってインストール： <a href="https://www.influxdata.com/" target="blank">https://www.influxdata.com/</a>  
+
+Ubuntu/Debian の場合：
+```bash
+wget https://dl.influxdata.com/influxdb/releases/influxdb_1.8.10_amd64.deb
+sudo dpkg -i influxdb_1.8.10_amd64.deb
+sudo systemctl start influxdb
+sudo systemctl enable influxdb
+```
+
+#### Grafanaをインストール  
+公式サイトの手順に従ってインストール： <a href="https://grafana.com/" target="_blank"> https://grafana.com/ </a>
+
+Ubuntu/Debian の場合：
+```bash
+sudo apt-get install -y software-properties-common
+sudo add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
+wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
+sudo apt-get update
+sudo apt-get install grafana
+sudo systemctl start grafana-server
+sudo systemctl enable grafana-server
+```
 
 "STM-2_dashboard.json" をインポートして各種設定を完了させる。  
 - Grafana → Dashboards → Import  
