@@ -96,10 +96,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
       "targets": [
         {
-          "query": SELECT last("frequency")
-          FROM "stm2"
-          WHERE $timeFilter AND "run_id" =~ /^$run_id$/
-          GROUP BY "run_id"",
+          "query": "SELECT last(\"frequency\") FROM \"stm2\" WHERE $timeFilter AND \"run_id\" =~ /^$run_id$/ GROUP BY \"run_id\"",
           "rawQuery": true,
           "refId": "A"
         }
