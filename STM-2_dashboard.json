@@ -84,13 +84,52 @@
       "pluginVersion": "12.3.1",
       "targets": [
         {
-          "query": "SELECT (last(\"thickness\") / (SELECT last(\"target_thickness\") FROM \"stm2_settings\")) * 100 FROM \"stm2\"",
+          "query": "SELECT last(\"thickness\") FROM \"stm2\"",
           "rawQuery": true,
           "refId": "A",
+          "resultFormat": "time_series"
+        },
+        {
+          "query": "SELECT last(\"target_thickness\") FROM \"stm2_settings\"",
+          "rawQuery": true,
+          "refId": "B",
           "resultFormat": "time_series"
         }
       ],
       "title": "⚠️ Target Progress Alert",
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Progress",
+            "binary": {
+              "left": "stm2.last",
+              "operator": "/",
+              "right": "stm2_settings.last"
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            }
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Percentage",
+            "binary": {
+              "left": "Progress",
+              "operator": "*",
+              "right": "100"
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            },
+            "replaceFields": true
+          }
+        }
+      ],
       "type": "stat"
     },
     {
