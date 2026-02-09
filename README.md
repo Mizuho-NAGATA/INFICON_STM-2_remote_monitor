@@ -13,6 +13,8 @@
 
 - STM-2 の膜厚・成膜レート・周波数をリアルタイム監視
 - ネットワーク経由での多地点同時監視
+- 目標厚さの80%を超えるとパネルが赤く点灯してお知らせします
+![keikoku](https://github.com/user-attachments/assets/13df291b-82ce-4b08-9643-8e03dbeeca35)
 
 ## STM-2接続パソコンの準備：
 Windowsマシンを想定しています。  
