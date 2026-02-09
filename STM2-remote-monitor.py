@@ -58,10 +58,6 @@ def setup_font():
     
     return ctk.CTkFont(family=font_family, size=24)
 
-# GUI構築時に使用
-def build_gui(self):
-    default_font = setup_font()  # プラットフォーム自動検出
-
 # ============================================================
 # ロガー本体（GUI 非依存）
 # ============================================================
@@ -237,7 +233,7 @@ class STM2LoggerGUI:
     # GUI 構築
     # ----------------------------
     def build_gui(self):
-        default_font = ctk.CTkFont(family="Meiryo", size=24)
+        default_font = setup_font()
         frame = ctk.CTkFrame(self.root, corner_radius=20)
         frame.pack(fill="both", expand=True, padx=20, pady=20)
         pad = {"padx": 10, "pady": 10}
