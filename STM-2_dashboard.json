@@ -31,18 +31,7 @@
           "color": {
             "mode": "thresholds"
           },
-          "mappings": [
-            {
-              "options": {
-                " 1": {
-                  "color": "dark-red",
-                  "index": 0,
-                  "text": "目標厚さの80％を超えました"
-                }
-              },
-              "type": "value"
-            }
-          ],
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -52,7 +41,7 @@
               },
               {
                 "color": "red",
-                "value": 1
+                "value": 1000
               }
             ]
           }
@@ -61,22 +50,11 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "stm2_settings.last"
+              "options": "stm2.last"
             },
             "properties": [
               {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "1": {
-                        "index": 0,
-                        "text": "目標厚さの80%を超えました"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
+                "id": "color"
               }
             ]
           }
@@ -88,66 +66,34 @@
         "x": 0,
         "y": 0
       },
-      "id": 6,
+      "id": 5,
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "area",
-        "justifyMode": "center",
+        "justifyMode": "auto",
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
           ],
-          "fields": "/^stm2_settings\\.last$/",
+          "fields": "",
           "values": false
         },
         "showPercentChange": false,
-        "textMode": "value",
+        "textMode": "auto",
         "wideLayout": true
       },
       "pluginVersion": "12.3.1",
       "targets": [
         {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "stm2_settings",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT last(\"last\") FROM \"stm2_settings\"",
+          "query": "SELECT last(\"target_thickness\") FROM \"stm2_settings\"",
           "rawQuery": true,
           "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
+          "resultFormat": "time_series"
         }
       ],
-      "title": "Thickness 80% Alert",
+      "title": "Target Thickness [nm]",
       "type": "stat"
     },
     {
@@ -241,81 +187,6 @@
         }
       ],
       "title": "Thickness [nm]",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "ffa7izoai6m80b"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 1000
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "stm2.last"
-            },
-            "properties": [
-              {
-                "id": "color"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
-      },
-      "id": 5,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.3.1",
-      "targets": [
-        {
-          "query": "SELECT last(\"target_thickness\") FROM \"stm2_settings\"",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series"
-        }
-      ],
-      "title": "Target Thickness [nm]",
       "type": "stat"
     },
     {
@@ -650,5 +521,5 @@
   "timezone": "browser",
   "title": "STM-2",
   "uid": "adww8zx",
-  "version": 80
+  "version": 2
 }
