@@ -84,17 +84,17 @@
       "pluginVersion": "12.3.1",
       "targets": [
         {
+          "alias": "thickness",
           "datasource": {
             "type": "influxdb",
             "uid": "ffa7izoai6m80b"
           },
           "groupBy": [],
-          "hide": true,
           "measurement": "stm2",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
-          "resultFormat": "time_series",
+          "resultFormat": "table",
           "select": [
             [
               {
@@ -112,17 +112,17 @@
           "tags": []
         },
         {
+          "alias": "target",
           "datasource": {
             "type": "influxdb",
             "uid": "ffa7izoai6m80b"
           },
           "groupBy": [],
-          "hide": true,
           "measurement": "stm2_settings",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "B",
-          "resultFormat": "time_series",
+          "resultFormat": "table",
           "select": [
             [
               {
@@ -138,20 +138,59 @@
             ]
           ],
           "tags": []
-        },
-        {
-          "datasource": {
-            "name": "Expression",
-            "type": "__expr__",
-            "uid": "__expr__"
-          },
-          "expression": "($A / $B) * 100",
-          "hide": false,
-          "refId": "C",
-          "type": "math"
         }
       ],
       "title": "⚠️ Target Progress Alert",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "last": "thickness_value",
+              "last_1": "target_value"
+            }
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Percentage",
+            "binary": {
+              "left": "thickness_value",
+              "operator": "/",
+              "right": "target_value"
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            }
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Progress",
+            "binary": {
+              "left": "Percentage",
+              "operator": "*",
+              "right": "100"
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            },
+            "replaceFields": true
+          }
+        }
+      ],
       "type": "stat"
     },
     {
