@@ -14,6 +14,8 @@ import os
 import threading
 import time
 from tkinter import filedialog, messagebox
+import sys
+import platform
 
 import customtkinter as ctk
 from influxdb import InfluxDBClient
@@ -43,6 +45,22 @@ MATERIAL_DATA = {
     "Ti": {"density": 4.54, "zratio": 0.628},
 }
 
+def setup_font():
+    """Set appropriate font based on platform"""
+    current_platform = platform.system()  # 'Windows', 'Darwin' (macOS), 'Linux'
+    
+    if current_platform == 'Windows':
+        font_family = "Meiryo"
+    elif current_platform == 'Darwin':  # macOS
+        font_family = "Hiragino Sans"
+    else:  # Linux
+        font_family = "Noto Sans CJK JP"
+    
+    return ctk.CTkFont(family=font_family, size=24)
+
+# GUI構築時に使用
+def build_gui(self):
+    default_font = setup_font()  # プラットフォーム自動検出
 
 # ============================================================
 # ロガー本体（GUI 非依存）
@@ -81,16 +99,7 @@ class STM2Logger:
     # ----------------------------
     # tail スレッド
     # ----------------------------
-    def tail_file(
-        self,
-        filepath,
-        run_id,
-        material,
-        density,
-        z_ratio,
-        alert_threshold,
-        callback=None,
-    ):
+    def tail_file(self, filepath, run_id, material, density, z_ratio, alert_threshold, target_nm, callback=None):
 
         if run_id not in self.prev_alert_state:
             self.prev_alert_state[run_id] = None
@@ -114,8 +123,11 @@ class STM2Logger:
                         continue
 
                     # ----------------------------
-                    # InfluxDB 書き込み
+                    # InfluxDB 書き込み（density / z_ratio を tag 化）
                     # ----------------------------
+                    # パーセンテージ計算
+                    progress_percentage = (data["thickness"] / target_nm) * 100 if target_nm > 0 else 0
+                    
                     json_body = [
                         {
                             "measurement": "stm2",
@@ -130,6 +142,7 @@ class STM2Logger:
                                 "rate": data["rate"],
                                 "thickness": data["thickness"],
                                 "frequency": data["frequency"],
+                                "progress_percentage": progress_percentage,
                             },
                         }
                     ]
@@ -140,28 +153,24 @@ class STM2Logger:
                         print(f"InfluxDB write error: {e}")
 
                     # ----------------------------
-                    # アラート判定（毎秒書き込み）
+                    # アラート判定
                     # ----------------------------
                     alert_state = int(data["thickness"] >= alert_threshold)
 
-                    try:
-                        self.client.write_points(
-                            [
+                    if alert_state != self.prev_alert_state[run_id]:
+                        try:
+                            self.client.write_points([
                                 {
                                     "measurement": "stm2_settings",
                                     "tags": {"run_id": run_id},
-                                    "fields": {
-                                        "alert_state": alert_state,
-                                        "current_thickness": data["thickness"],
-                                        "alert_threshold": alert_threshold,
-                                    },
+                                    "fields": {"alert_state": alert_state}
                                 }
-                            ]
-                        )
-                    except Exception as e:
-                        print(f"InfluxDB alert write error: {e}")
+                            ])
+                            self.prev_alert_state[run_id] = alert_state
+                        except Exception as e:
+                            print(f"InfluxDB alert write error: {e}")
 
-                    # GUI 更新
+                    # GUI 更新コールバック
                     if callback:
                         callback(data)
 
@@ -172,42 +181,30 @@ class STM2Logger:
     # ----------------------------
     # ログ監視開始
     # ----------------------------
-    def start(
-        self, filepath, run_id, material, density, z_ratio, target_nm, callback=None
-    ):
+    def start(self, filepath, run_id, material, density, z_ratio, target_nm, callback=None):
         self.stop_event.clear()
         alert_threshold = target_nm * 0.8
 
         # 初期設定を InfluxDB に書き込み
         try:
-            self.client.write_points(
-                [
-                    {
-                        "measurement": "stm2_settings",
-                        "tags": {"run_id": run_id},
-                        "fields": {
-                            "target_thickness": target_nm,
-                            "alert_threshold": alert_threshold,
-                        },
+            self.client.write_points([
+                {
+                    "measurement": "stm2_settings",
+                    "tags": {"run_id": run_id},
+                    "fields": {
+                        "target_thickness": target_nm,
+                        "alert_threshold": alert_threshold
                     }
-                ]
-            )
+                }
+            ])
         except Exception as e:
             raise RuntimeError(f"InfluxDB 初期化失敗: {e}")
 
         # スレッド開始
         self.thread = threading.Thread(
             target=self.tail_file,
-            args=(
-                filepath,
-                run_id,
-                material,
-                density,
-                z_ratio,
-                alert_threshold,
-                callback,
-            ),
-            daemon=True,
+            args=(filepath, run_id, material, density, z_ratio, alert_threshold, target_nm, callback),
+            daemon=True
         )
         self.thread.start()
 
