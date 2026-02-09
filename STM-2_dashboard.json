@@ -84,10 +84,71 @@
       "pluginVersion": "12.3.1",
       "targets": [
         {
-          "query": "SELECT (last(\"thickness\") / (SELECT last(\"target_thickness\") FROM \"stm2_settings\")) * 100 FROM \"stm2\"",
-          "rawQuery": true,
+          "datasource": {
+            "type": "influxdb",
+            "uid": "ffa7izoai6m80b"
+          },
+          "groupBy": [],
+          "hide": false,
+          "measurement": "stm2",
+          "orderByTime": "ASC",
+          "policy": "default",
           "refId": "A",
-          "resultFormat": "time_series"
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "thickness"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "ffa7izoai6m80b"
+          },
+          "groupBy": [],
+          "hide": false,
+          "measurement": "stm2_settings",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "target_thickness"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "datasource": {
+            "name": "Expression",
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "expression": "$A / $B * 100",
+          "hide": false,
+          "refId": "C",
+          "type": "math"
         }
       ],
       "title": "⚠️ Target Progress Alert",
