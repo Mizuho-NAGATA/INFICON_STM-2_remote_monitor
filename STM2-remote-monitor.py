@@ -83,66 +83,105 @@ class STM2Logger:
     # ----------------------------
     # tail_file の修正版（抜粋）
     def tail_file(self, filepath, run_id, material, density, z_ratio, alert_threshold, target_nm, callback=None):
-      # alert_threshold は target_nm * 0.8 として渡される想定
-      # ヒステリシスを導入：オン閾値とオフ閾値を分ける
-      on_threshold = target_nm * 0.8
-      off_threshold = target_nm * 0.78  # 例：2% のヒステリシス
+        # CSV は厚みが Å 単位で来るため nm に変換する（1 nm = 10 Å）
+        on_percent = 80.0
+        off_percent = 78.0  # ヒステリシス幅の例
 
-      # 初期状態を確実に設定（None のままにしない）
-      if run_id not in self.prev_alert_state:
-          self.prev_alert_state[run_id] = 0
+        if run_id not in self.prev_alert_state:
+            self.prev_alert_state[run_id] = 0
 
-      try:
-          with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-              f.seek(0, os.SEEK_END)
+        try:
+            with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                f.seek(0, os.SEEK_END)
 
-              while not self.stop_event.is_set():
-                  line = f.readline()
-                  if not line:
-                      time.sleep(0.2)
-                      continue
+                while not self.stop_event.is_set():
+                    line = f.readline()
+                    if not line:
+                        time.sleep(0.2)
+                        continue
 
-                  line = line.strip()
-                  if not line or line.startswith(("Start", "Stop", "Time")):
-                      continue
+                    line = line.strip()
+                    if not line or line.startswith(("Start", "Stop", "Time")):
+                        continue
+    
+                    data = self.parse_csv_line(line)
+                    if not data:
+                        continue
 
-                  data = self.parse_csv_line(line)
-                  if not data:
-                      continue
+                    # ---- 単位変換: Å -> nm ----
+                    thickness_angstrom = data["thickness"]
+                    thickness_nm = thickness_angstrom / 10.0
+    
+                    # ---- percent_of_target を計算 ----
+                    percent = None
+                    try:
+                        if target_nm and target_nm > 0:
+                            percent = (thickness_nm / target_nm) * 100.0
+                    except Exception:
+                        percent = None
 
-                  # 百分率を計算して追加
-                  percent = None
-                  try:
-                      if target_nm and target_nm > 0:
-                          percent = (data["thickness"] / target_nm) * 100.0
-                  except Exception:
-                      percent = None
-  
-                  # InfluxDB 書き込み（percent を fields に入れる）
-                  json_body = [
-                      {
-                          "measurement": "stm2",
-                          "tags": {
-                              "run_id": run_id,
-                              "material": material,
-                              "density": str(density),
-                              "z_ratio": str(z_ratio),
-                          },
-                          "fields": {
-                              "time": data["time"],
-                              "rate": data["rate"],
-                              "thickness": data["thickness"],
-                              "frequency": data["frequency"],
-                              # 追加
-                              "percent_of_target": percent if percent is not None else 0.0,
-                          },
-                      }
-                  ]
-                  try:
-                      self.client.write_points(json_body)
-                  except Exception as e:
-                      print(f"InfluxDB write error: {e}")
+                    # ---- InfluxDB 書き込み（nm と percent を fields に保存） ----
+                    json_body = [
+                        {
+                            "measurement": "stm2",
+                            "tags": {
+                                "run_id": run_id,
+                                "material": material,
+                                "density": str(density),
+                                "z_ratio": str(z_ratio),
+                            },
+                            "fields": {
+                                "time": data["time"],
+                                "rate": data["rate"],
+                                # 既存互換を残すため厚み(Å)も保存しつつ、nm でも保存
+                                "thickness": data["thickness"],
+                                "thickness_nm": thickness_nm,
+                                "frequency": data["frequency"],
+                                "percent_of_target": percent if percent is not None else 0.0,
+                            },
+                        }
+                    ]
+                    try:
+                        self.client.write_points(json_body)
+                    except Exception as e:
+                        print(f"InfluxDB write error: {e}")
+    
+                    # ---- アラート判定（percent を基準にヒステリシス） ----
+                    prev = self.prev_alert_state.get(run_id, 0)
+                    if percent is None:
+                        alert_state = prev
+                    else:
+                        if percent >= on_percent:
+                            alert_state = 1
+                        elif percent < off_percent:
+                            alert_state = 0
+                        else:
+                            alert_state = prev  # ヒステリシス帯では変えない
 
+                    if alert_state != prev:
+                        try:
+                            self.client.write_points([
+                                {
+                                    "measurement": "stm2_settings",
+                                    "tags": {"run_id": run_id},
+                                    "fields": {"alert_state": alert_state}
+                                }
+                            ])
+                            self.prev_alert_state[run_id] = alert_state
+                        except Exception as e:
+                            print(f"InfluxDB alert write error: {e}")
+
+                    # GUI 更新コールバック（percent と alert_state を含める）
+                    if callback:
+                        cb_data = dict(data)
+                        cb_data["thickness_nm"] = thickness_nm
+                        cb_data["percent_of_target"] = percent
+                        cb_data["alert_state"] = self.prev_alert_state.get(run_id, 0)
+                        callback(cb_data)
+
+        except Exception as e:
+            if callback:
+                callback({"error": str(e)})
                 # ----------------------------
                 # アラート判定（ヒステリシス + デバウンスの簡易実装）
                 # ----------------------------
@@ -509,6 +548,7 @@ class STM2LoggerGUI:
 if __name__ == "__main__":
     gui = STM2LoggerGUI()
     gui.run()
+
 
 
 
