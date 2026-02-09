@@ -3,7 +3,7 @@
 # Copyright (c) 2026 NAGATA Mizuho.
 # Institute of Laser Engineering, The University of Osaka.
 # Created on: 2026-01-20
-# Last updated on: 2026-02-09
+# Last updated on: 2026-02-04
 #
 # pip install influxdb
 # pip install customtkinter
@@ -81,14 +81,19 @@ class STM2Logger:
     # ----------------------------
     # tail スレッド
     # ----------------------------
-    # tail_file の修正版（抜粋）
-    def tail_file(self, filepath, run_id, material, density, z_ratio, alert_threshold, target_nm, callback=None):
-        # CSV は厚みが Å 単位で来るため nm に変換する（1 nm = 10 Å）
-        on_percent = 80.0
-        off_percent = 78.0  # ヒステリシス幅の例
+    def tail_file(
+        self,
+        filepath,
+        run_id,
+        material,
+        density,
+        z_ratio,
+        alert_threshold,
+        callback=None,
+    ):
 
         if run_id not in self.prev_alert_state:
-            self.prev_alert_state[run_id] = 0
+            self.prev_alert_state[run_id] = None
 
         try:
             with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
@@ -103,122 +108,10 @@ class STM2Logger:
                     line = line.strip()
                     if not line or line.startswith(("Start", "Stop", "Time")):
                         continue
-    
+
                     data = self.parse_csv_line(line)
                     if not data:
                         continue
-
-                    # ---- 単位変換: Å -> nm ----
-                    thickness_angstrom = data["thickness"]
-                    thickness_nm = thickness_angstrom / 10.0
-    
-                    # ---- percent_of_target を計算 ----
-                    percent = None
-                    try:
-                        if target_nm and target_nm > 0:
-                            percent = (thickness_nm / target_nm) * 100.0
-                    except Exception:
-                        percent = None
-
-                    # ---- InfluxDB 書き込み（nm と percent を fields に保存） ----
-                    json_body = [
-                        {
-                            "measurement": "stm2",
-                            "tags": {
-                                "run_id": run_id,
-                                "material": material,
-                                "density": str(density),
-                                "z_ratio": str(z_ratio),
-                            },
-                            "fields": {
-                                "time": data["time"],
-                                "rate": data["rate"],
-                                # 既存互換を残すため厚み(Å)も保存しつつ、nm でも保存
-                                "thickness": data["thickness"],
-                                "thickness_nm": thickness_nm,
-                                "frequency": data["frequency"],
-                                "percent_of_target": percent if percent is not None else 0.0,
-                            },
-                        }
-                    ]
-                    try:
-                        self.client.write_points(json_body)
-                    except Exception as e:
-                        print(f"InfluxDB write error: {e}")
-    
-                    # ---- アラート判定（percent を基準にヒステリシス） ----
-                    prev = self.prev_alert_state.get(run_id, 0)
-                    if percent is None:
-                        alert_state = prev
-                    else:
-                        if percent >= on_percent:
-                            alert_state = 1
-                        elif percent < off_percent:
-                            alert_state = 0
-                        else:
-                            alert_state = prev  # ヒステリシス帯では変えない
-
-                    if alert_state != prev:
-                        try:
-                            self.client.write_points([
-                                {
-                                    "measurement": "stm2_settings",
-                                    "tags": {"run_id": run_id},
-                                    "fields": {"alert_state": alert_state}
-                                }
-                            ])
-                            self.prev_alert_state[run_id] = alert_state
-                        except Exception as e:
-                            print(f"InfluxDB alert write error: {e}")
-
-                    # GUI 更新コールバック（percent と alert_state を含める）
-                    if callback:
-                        cb_data = dict(data)
-                        cb_data["thickness_nm"] = thickness_nm
-                        cb_data["percent_of_target"] = percent
-                        cb_data["alert_state"] = self.prev_alert_state.get(run_id, 0)
-                        callback(cb_data)
-
-        except Exception as e:
-            if callback:
-                callback({"error": str(e)})
-                # ----------------------------
-                # アラート判定（ヒステリシス + デバウンスの簡易実装）
-                # ----------------------------
-                prev = self.prev_alert_state.get(run_id, 0)
-                # 決めうちの判定（on/off ヒステリシス）
-                if data["thickness"] >= on_threshold:
-                    alert_state = 1
-                elif data["thickness"] < off_threshold:
-                    alert_state = 0
-                else:
-                    # ヒステリシス帯内では状態を変えない（これでチラつきを抑える）
-                    alert_state = prev
-
-                if alert_state != prev:
-                    try:
-                        # 状態が変わったら DB に書く
-                        self.client.write_points([
-                            {
-                                "measurement": "stm2_settings",
-                                "tags": {"run_id": run_id},
-                                "fields": {"alert_state": alert_state}
-                            }
-                        ])
-                        self.prev_alert_state[run_id] = alert_state
-                    except Exception as e:
-                        print(f"InfluxDB alert write error: {e}")
-
-                # GUI 更新コールバック（percent と alert_state を含める）
-                if callback:
-                    cb_data = dict(data)
-                    cb_data["percent_of_target"] = percent
-                    cb_data["alert_state"] = self.prev_alert_state.get(run_id, 0)
-                    callback(cb_data)
-
-    except Exception as e:
-        if callback:
-            callback({"error": str(e)})
 
                     # ----------------------------
                     # InfluxDB 書き込み（density / z_ratio を tag 化）
@@ -249,85 +142,76 @@ class STM2Logger:
                     # ----------------------------
                     # アラート判定
                     # ----------------------------
+                    # ----------------------------
+                    # アラート判定（毎秒書き込み）
+                    # ----------------------------
                     alert_state = int(data["thickness"] >= alert_threshold)
 
-                    if alert_state != self.prev_alert_state[run_id]:
-                        try:
-                            self.client.write_points([
-                                {
-                                    "measurement": "stm2_settings",
-                                    "tags": {"run_id": run_id},
-                                    "fields": {"alert_state": alert_state}
+                    try:
+                        self.client.write_points([
+                            {
+                                "measurement": "stm2_settings",
+                                "tags": {"run_id": run_id},
+                                "fields": {
+                                    "alert_state": alert_state,
+                                    "current_thickness": data["thickness"],
+                                    "alert_threshold": alert_threshold
                                 }
-                            ])
-                            self.prev_alert_state[run_id] = alert_state
-                        except Exception as e:
-                            print(f"InfluxDB alert write error: {e}")
-
-                    # GUI 更新コールバック
-                    if callback:
-                        callback(data)
-
-        except Exception as e:
-            if callback:
-                callback({"error": str(e)})
+                            }
+                        ])
+                    except Exception as e:
+                        print(f"InfluxDB alert write error: {e}")
 
     # ----------------------------
     # ログ監視開始
     # ----------------------------
-    # start の修正版（抜粋）
-    def start(self, filepath, run_id, material, density, z_ratio, target_nm, callback=None):
+    def start(
+        self, filepath, run_id, material, density, z_ratio, target_nm, callback=None
+    ):
         self.stop_event.clear()
         alert_threshold = target_nm * 0.8
 
         # 初期設定を InfluxDB に書き込み
         try:
-            self.client.write_points([
-                {
-                    "measurement": "stm2_settings",
-                    "tags": {"run_id": run_id},
-                    "fields": {
-                        "target_thickness": target_nm,
-                        "alert_threshold": alert_threshold
+            self.client.write_points(
+                [
+                    {
+                        "measurement": "stm2_settings",
+                        "tags": {"run_id": run_id},
+                        "fields": {
+                            "target_thickness": target_nm,
+                            "alert_threshold": alert_threshold,
+                        },
                     }
-                }
-            ])
+                ]
+            )
         except Exception as e:
             raise RuntimeError(f"InfluxDB 初期化失敗: {e}")
 
-        # prev_alert_state を明示的に初期化（前回の状態が残っているとまずい）
-        self.prev_alert_state[run_id] = 0
-
-        # スレッド開始（target_nm を tail_file に渡す）
+        # スレッド開始
         self.thread = threading.Thread(
             target=self.tail_file,
-            args=(filepath, run_id, material, density, z_ratio, alert_threshold, target_nm, callback),
-            daemon=True
+            args=(
+                filepath,
+                run_id,
+                material,
+                density,
+                z_ratio,
+                alert_threshold,
+                callback,
+            ),
+            daemon=True,
         )
         self.thread.start()
+
     # ----------------------------
     # 停止
     # ----------------------------
-    # stop の修正版（抜粋）
     def stop(self):
         self.stop_event.set()
         if self.thread:
             self.thread.join(timeout=1.0)
 
-        # 停止時はすべての run_id の alert_state を明示的にオフにする（DB 更新）
-        for run_id, state in list(self.prev_alert_state.items()):
-            if state:
-                try:
-                    self.client.write_points([
-                        {
-                            "measurement": "stm2_settings",
-                            "tags": {"run_id": run_id},
-                            "fields": {"alert_state": 0}
-                        }
-                    ])
-                    self.prev_alert_state[run_id] = 0
-                except Exception as e:
-                    print(f"InfluxDB alert clear error for {run_id}: {e}")
 
 # ============================================================
 # GUI
@@ -520,21 +404,14 @@ class STM2LoggerGUI:
     # ----------------------------
     # GUI 更新
     # ----------------------------
-    # GUI 側 update_status の修正版（抜粋）
     def update_status(self, data):
         if "error" in data:
             self.label_status.configure(text=f"Error: {data['error']}")
         else:
-            percent = data.get("percent_of_target")
-            alert = data.get("alert_state", 0)
-            if percent is not None:
-                self.label_status.configure(
-                    text=f"t={data['time']}  thick={data['thickness']} nm  ({percent:.1f}% of target)  alert={'ON' if alert else 'OFF'}"
-                )
-            else:
-                self.label_status.configure(
-                    text=f"t={data['time']}  thick={data['thickness']} nm  alert={'ON' if alert else 'OFF'}"
-                )
+            self.label_status.configure(
+                text=f"t={data['time']}  thick={data['thickness']}"
+            )
+
     # ----------------------------
     # 実行
     # ----------------------------
@@ -548,10 +425,3 @@ class STM2LoggerGUI:
 if __name__ == "__main__":
     gui = STM2LoggerGUI()
     gui.run()
-
-
-
-
-
-
-
