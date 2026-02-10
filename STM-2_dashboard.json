@@ -19,7 +19,6 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": 0,
-  "links": [],
   "panels": [
     {
       "datasource": {
@@ -31,7 +30,6 @@
           "color": {
             "mode": "thresholds"
           },
-          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -50,8 +48,7 @@
             ]
           },
           "unit": "percent"
-        },
-        "overrides": []
+        }
       },
       "gridPos": {
         "h": 8,
@@ -81,13 +78,8 @@
         "textMode": "value_and_name",
         "wideLayout": true
       },
-      "pluginVersion": "12.3.1",
       "targets": [
         {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "ffa7izoai6m80b"
-          },
           "groupBy": [],
           "measurement": "stm2",
           "orderByTime": "ASC",
@@ -124,7 +116,6 @@
           "color": {
             "mode": "thresholds"
           },
-          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -138,8 +129,7 @@
               }
             ]
           }
-        },
-        "overrides": []
+        }
       },
       "gridPos": {
         "h": 8,
@@ -165,7 +155,6 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.3.1",
       "targets": [
         {
           "groupBy": [
@@ -217,7 +206,6 @@
           "color": {
             "mode": "thresholds"
           },
-          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -270,7 +258,6 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.3.1",
       "targets": [
         {
           "query": "SELECT last(\"target_thickness\") FROM \"stm2_settings\"",
@@ -292,7 +279,6 @@
           "color": {
             "mode": "thresholds"
           },
-          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -306,8 +292,7 @@
               }
             ]
           }
-        },
-        "overrides": []
+        }
       },
       "gridPos": {
         "h": 8,
@@ -333,13 +318,8 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.3.1",
       "targets": [
         {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "ffa7izoai6m80b"
-          },
           "groupBy": [
             {
               "params": [
@@ -399,7 +379,6 @@
             },
             "inspect": false
           },
-          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -413,8 +392,7 @@
               }
             ]
           }
-        },
-        "overrides": []
+        }
       },
       "gridPos": {
         "h": 3,
@@ -433,7 +411,6 @@
           }
         ]
       },
-      "pluginVersion": "12.3.1",
       "targets": [
         {
           "groupBy": [
@@ -478,7 +455,6 @@
           "tags": []
         }
       ],
-      "title": "",
       "transformations": [
         {
           "id": "organize",
@@ -514,7 +490,6 @@
           "color": {
             "mode": "palette-classic"
           },
-          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -528,8 +503,7 @@
               }
             ]
           }
-        },
-        "overrides": []
+        }
       },
       "gridPos": {
         "h": 8,
@@ -555,7 +529,6 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "12.3.1",
       "targets": [
         {
           "groupBy": [
@@ -600,18 +573,12 @@
       "type": "stat"
     }
   ],
-  "preload": false,
   "refresh": "5s",
   "schemaVersion": 42,
-  "tags": [],
-  "templating": {
-    "list": []
-  },
   "time": {
     "from": "now-5m",
     "to": "now"
   },
-  "timepicker": {},
   "timezone": "browser",
   "title": "STM-2__",
   "uid": "adww8zxxx",
