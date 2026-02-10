@@ -19,11 +19,11 @@
 ![keikoku](https://github.com/user-attachments/assets/13df291b-82ce-4b08-9643-8e03dbeeca35)
 
 注意：このプログラムはINFICON社の公式なものではありません。  
-Note: This program is not official INFICON.  
 本リポジトリの著者は商用サポートを提供するものではありません。ネットワーク構成やセキュリティ対策は各組織のポリシーに従って実施してください。  
-The author of this repository does not provide commercial support. Network configuration and security measures should be implemented in accordance with each organization's policies.  
 本システムで使用する物性値について、正確性を保証するものではありません。利用により生じたいかなる結果についても、作者は責任を負いません。  
 電子ビーム蒸着装置に取り付けられたSTM-2を想定して作成。  
+Note: This program is not official INFICON.  
+The author of this repository does not provide commercial support. Network configuration and security measures should be implemented in accordance with each organization's policies.  
 
 ## STM-2接続パソコンの準備：
 
