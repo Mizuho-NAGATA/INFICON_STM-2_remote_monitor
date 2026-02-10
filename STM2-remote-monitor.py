@@ -3,7 +3,7 @@
 # Copyright (c) 2026 NAGATA Mizuho.
 # Institute of Laser Engineering, The University of Osaka.
 # Created on: 2026-01-20
-# Last updated on: 2026-02-04
+# Last updated on: 2026-02-09
 #
 # pip install influxdb
 # pip install customtkinter
@@ -14,6 +14,8 @@ import os
 import threading
 import time
 from tkinter import filedialog, messagebox
+import sys
+import platform
 
 import customtkinter as ctk
 from influxdb import InfluxDBClient
@@ -43,6 +45,18 @@ MATERIAL_DATA = {
     "Ti": {"density": 4.54, "zratio": 0.628},
 }
 
+def setup_font():
+    """Set appropriate font based on platform"""
+    current_platform = platform.system()  # 'Windows', 'Darwin' (macOS), 'Linux'
+    
+    if current_platform == 'Windows':
+        font_family = "Meiryo"
+    elif current_platform == 'Darwin':  # macOS
+        font_family = "Hiragino Sans"
+    else:  # Linux
+        font_family = "Noto Sans CJK JP"
+    
+    return ctk.CTkFont(family=font_family, size=24)
 
 # ============================================================
 # ロガー本体（GUI 非依存）
@@ -81,7 +95,7 @@ class STM2Logger:
     # ----------------------------
     # tail スレッド
     # ----------------------------
-    def tail_file(self, filepath, run_id, material, density, z_ratio, alert_threshold, callback=None):
+    def tail_file(self, filepath, run_id, material, density, z_ratio, alert_threshold, target_nm, callback=None):
 
         if run_id not in self.prev_alert_state:
             self.prev_alert_state[run_id] = None
@@ -107,6 +121,9 @@ class STM2Logger:
                     # ----------------------------
                     # InfluxDB 書き込み（density / z_ratio を tag 化）
                     # ----------------------------
+                    # パーセンテージ計算
+                    progress_percentage = (data["thickness"] / target_nm) * 100 if target_nm > 0 else 0
+                    
                     json_body = [
                         {
                             "measurement": "stm2",
@@ -121,6 +138,7 @@ class STM2Logger:
                                 "rate": data["rate"],
                                 "thickness": data["thickness"],
                                 "frequency": data["frequency"],
+                                "progress_percentage": progress_percentage,
                             },
                         }
                     ]
@@ -181,7 +199,7 @@ class STM2Logger:
         # スレッド開始
         self.thread = threading.Thread(
             target=self.tail_file,
-            args=(filepath, run_id, material, density, z_ratio, alert_threshold, callback),
+            args=(filepath, run_id, material, density, z_ratio, alert_threshold, target_nm, callback),
             daemon=True
         )
         self.thread.start()
@@ -215,7 +233,7 @@ class STM2LoggerGUI:
     # GUI 構築
     # ----------------------------
     def build_gui(self):
-        default_font = ctk.CTkFont(family="Meiryo", size=24)
+        default_font = setup_font()
         frame = ctk.CTkFrame(self.root, corner_radius=20)
         frame.pack(fill="both", expand=True, padx=20, pady=20)
         pad = {"padx": 10, "pady": 10}
@@ -407,10 +425,4 @@ class STM2LoggerGUI:
 if __name__ == "__main__":
     gui = STM2LoggerGUI()
     gui.run()
-
-
-
-
-
-
 
