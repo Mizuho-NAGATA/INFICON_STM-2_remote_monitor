@@ -209,5 +209,14 @@ sudo systemctl enable grafana-server
 
 ---
 
+## 著者  
+- Copyright (c) 2026 NAGATA Mizuho, 永田 みず穂 - Institute of Laser Engineering, The University of Osaka
+---
+
+## ライセンス License
+- このプロジェクトはMITライセンスの下で公開されています。ライセンスの全文については、[LICENSE](https://github.com/Mizuho-NAGATA/INFICON_STM-2_remote_monitor/blob/main/LICENSE) をご覧ください。  
+- This project is released under the MIT License. For the full text of the license, please see the LICENSE file.
+---
+
 ## 謝辞
 - 本開発は文部科学省先端研究基盤共用促進事業（先端研究設備プラットフォームプログラム） JPMXS0450300021である パワーレーザーDXプラットフォーム で共用された機器を利用した成果です。
