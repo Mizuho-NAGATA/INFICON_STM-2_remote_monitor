@@ -219,4 +219,5 @@ sudo systemctl enable grafana-server
 ---
 
 ## 謝辞
-- 本開発は文部科学省先端研究基盤共用促進事業（先端研究設備プラットフォームプログラム） JPMXS0450300021である パワーレーザーDXプラットフォーム で共用された機器を利用した成果です。
+- 本開発は文部科学省先端研究基盤共用促進事業（先端研究設備プラットフォームプログラム） JPMXS0450300021である[パワーレーザーDXプラットフォーム](https://powerlaser.jp/)で共用された機器を利用した成果です。
+- This work was the result of using research equipment shared by the [Power Laser DX Platform(https://powerlaser.jp/), which is MEXT Project for promoting public utilization of advanced research infrastructure（Program for advanced research equipment platforms）Grant Number JPMXS0450300021.
