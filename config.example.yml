@@ -1,0 +1,30 @@
+# Example Configuration File for STM2-remote
+# サンプル設定ファイル
+
+# InfluxDB Settings / InfluxDB 設定
+influxdb:
+  host: localhost
+  port: 8086
+  database: stm2
+
+# Grafana Settings / Grafana 設定
+grafana:
+  host: localhost
+  port: 3000
+  # Access Grafana at: http://localhost:3000
+
+# Default Materials / デフォルト材料
+# You can add custom materials in the application
+# アプリケーションでカスタム材料を追加できます
+
+# Network Settings / ネットワーク設定
+# Make sure to configure firewall rules for port 3000
+# ポート3000のファイアウォールルールを設定してください
+
+# Security Recommendations / セキュリティ推奨事項
+# - Use strong passwords for InfluxDB
+# - Configure HTTPS for Grafana in production
+# - Follow your organization's security policies
+# - InfluxDB に強力なパスワードを使用
+# - 本番環境では Grafana に HTTPS を設定
+# - 組織のセキュリティポリシーに従ってください

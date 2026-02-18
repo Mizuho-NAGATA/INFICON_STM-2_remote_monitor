@@ -1,14 +1,23 @@
-# -------------------------------------------------------------
-# 本ソフトウェアは Microsoft Copilot 、ChatGPT を活用して開発されました。
-# Copyright (c) 2026 NAGATA Mizuho.
-# Institute of Laser Engineering, The University of Osaka.
-# Created on: 2026-01-20
-# Last updated on: 2026-02-09
-#
-# pip install influxdb
-# pip install customtkinter
-# pip install tkinterdnd2
-# -------------------------------------------------------------
+#!/usr/bin/env python3
+"""
+STM-2 Remote Monitor Application
+
+This application monitors INFICON STM-2 thin film deposition rate/thickness
+monitor log files and sends data to InfluxDB for real-time visualization
+with Grafana.
+
+Copyright (c) 2026 NAGATA Mizuho.
+Institute of Laser Engineering, The University of Osaka.
+Created on: 2026-01-20
+Last updated on: 2026-02-09
+
+本ソフトウェアは Microsoft Copilot 、ChatGPT を活用して開発されました。
+
+Dependencies:
+    pip install influxdb
+    pip install customtkinter
+    pip install tkinterdnd2
+"""
 import csv
 import os
 import threading
@@ -21,9 +30,9 @@ import customtkinter as ctk
 from influxdb import InfluxDBClient
 from tkinterdnd2 import DND_FILES, TkinterDnD
 
-# --- 材料データ ---
-# MATERIAL_DATA の出典
-# 密度（Density）:
+# --- Material Data / 材料データ ---
+# Data sources / 出典:
+# Density（密度）:
 #   （株）高純度化学研究所 サポートブック 2022〜 ・Webサイト
 # Z-RATIO:
 #   ・水晶発振式成膜コントローラ説明書（2005/09/30）p.62〜63
@@ -46,23 +55,48 @@ MATERIAL_DATA = {
 }
 
 def setup_font():
-    """Set appropriate font based on platform"""
+    """
+    Set appropriate font based on the current platform.
+
+    Returns:
+        CTkFont: Configured font object with appropriate family and size.
+    """
     current_platform = platform.system()  # 'Windows', 'Darwin' (macOS), 'Linux'
-    
+
     if current_platform == 'Windows':
         font_family = "Meiryo"
     elif current_platform == 'Darwin':  # macOS
         font_family = "Hiragino Sans"
     else:  # Linux
         font_family = "Noto Sans CJK JP"
-    
+
     return ctk.CTkFont(family=font_family, size=24)
 
 # ============================================================
-# ロガー本体（GUI 非依存）
+# Logger Core (GUI Independent) / ロガー本体（GUI 非依存）
 # ============================================================
 class STM2Logger:
+    """
+    Core logger class for monitoring STM-2 log files and sending data to InfluxDB.
+
+    This class handles file monitoring, data parsing, and database operations
+    independently of the GUI.
+
+    Attributes:
+        client (InfluxDBClient): InfluxDB client instance.
+        thread (Thread): Background thread for file monitoring.
+        stop_event (Event): Threading event for stopping the monitor.
+        prev_alert_state (dict): Previous alert states for each run_id.
+    """
     def __init__(self, host="localhost", port=8086, db="stm2"):
+        """
+        Initialize the STM2Logger.
+
+        Args:
+            host (str): InfluxDB host address. Default is "localhost".
+            port (int): InfluxDB port. Default is 8086.
+            db (str): Database name. Default is "stm2".
+        """
         self.client = InfluxDBClient(host=host, port=port)
         self.client.switch_database(db)
 
@@ -71,13 +105,24 @@ class STM2Logger:
         self.prev_alert_state = {}
 
     # ----------------------------
+    # CSV Line Parser (STM-2 format: 5 columns with trailing comma)
     # CSV 1行パース（STM-2 は5列、末尾が空欄）
     # ----------------------------
     def parse_csv_line(self, line):
+        """
+        Parse a single CSV line from STM-2 log file.
+
+        Args:
+            line (str): A line from the CSV file.
+
+        Returns:
+            dict: Parsed data containing time, rate, thickness, and frequency,
+                  or None if parsing fails.
+        """
         try:
             row = next(csv.reader([line]))
 
-            # 末尾の空要素を削除（STM-2ログは最後にカンマが付く）
+            # Remove trailing empty elements (STM-2 logs end with a comma)
             row = [x for x in row if x.strip() != ""]
 
             if len(row) != 4:
@@ -93,9 +138,22 @@ class STM2Logger:
             return None
 
     # ----------------------------
-    # tail スレッド
+    # File Tail Thread / tail スレッド
     # ----------------------------
     def tail_file(self, filepath, run_id, material, density, z_ratio, alert_threshold, target_nm, callback=None):
+        """
+        Monitor a log file and send new data to InfluxDB.
+
+        Args:
+            filepath (str): Path to the log file to monitor.
+            run_id (str): Unique identifier for this monitoring run.
+            material (str): Material being deposited.
+            density (float): Material density.
+            z_ratio (float): Material Z-ratio.
+            alert_threshold (float): Thickness threshold for alerts.
+            target_nm (float): Target thickness in nanometers.
+            callback (callable, optional): Function to call with new data for GUI updates.
+        """
 
         if run_id not in self.prev_alert_state:
             self.prev_alert_state[run_id] = None
@@ -119,11 +177,12 @@ class STM2Logger:
                         continue
 
                     # ----------------------------
+                    # InfluxDB Write (density / z_ratio as tags)
                     # InfluxDB 書き込み（density / z_ratio を tag 化）
                     # ----------------------------
-                    # パーセンテージ計算
+                    # Calculate percentage
                     progress_percentage = (data["thickness"] / target_nm) * 100 if target_nm > 0 else 0
-                    
+
                     json_body = [
                         {
                             "measurement": "stm2",
@@ -149,7 +208,7 @@ class STM2Logger:
                         print(f"InfluxDB write error: {e}")
 
                     # ----------------------------
-                    # アラート判定
+                    # Alert Detection / アラート判定
                     # ----------------------------
                     alert_state = int(data["thickness"] >= alert_threshold)
 
@@ -166,7 +225,7 @@ class STM2Logger:
                         except Exception as e:
                             print(f"InfluxDB alert write error: {e}")
 
-                    # GUI 更新コールバック
+                    # GUI update callback
                     if callback:
                         callback(data)
 
@@ -175,13 +234,28 @@ class STM2Logger:
                 callback({"error": str(e)})
 
     # ----------------------------
-    # ログ監視開始
+    # Start Monitoring / ログ監視開始
     # ----------------------------
     def start(self, filepath, run_id, material, density, z_ratio, target_nm, callback=None):
+        """
+        Start monitoring a log file.
+
+        Args:
+            filepath (str): Path to the log file.
+            run_id (str): Unique identifier for this run.
+            material (str): Material name.
+            density (float): Material density.
+            z_ratio (float): Material Z-ratio.
+            target_nm (float): Target thickness in nanometers.
+            callback (callable, optional): Callback function for GUI updates.
+
+        Raises:
+            RuntimeError: If InfluxDB initialization fails.
+        """
         self.stop_event.clear()
         alert_threshold = target_nm * 0.8
 
-        # 初期設定を InfluxDB に書き込み
+        # Write initial settings to InfluxDB
         try:
             self.client.write_points([
                 {
@@ -196,7 +270,7 @@ class STM2Logger:
         except Exception as e:
             raise RuntimeError(f"InfluxDB 初期化失敗: {e}")
 
-        # スレッド開始
+        # Start monitoring thread
         self.thread = threading.Thread(
             target=self.tail_file,
             args=(filepath, run_id, material, density, z_ratio, alert_threshold, target_nm, callback),
@@ -205,19 +279,31 @@ class STM2Logger:
         self.thread.start()
 
     # ----------------------------
-    # 停止
+    # Stop Monitoring / 停止
     # ----------------------------
     def stop(self):
+        """Stop the monitoring thread."""
         self.stop_event.set()
         if self.thread:
             self.thread.join(timeout=1.0)
 
 
 # ============================================================
-# GUI
+# GUI Application / GUI
 # ============================================================
 class STM2LoggerGUI:
+    """
+    GUI application for STM-2 log monitoring.
+
+    This class provides a user-friendly interface for configuring and
+    monitoring STM-2 deposition processes.
+
+    Attributes:
+        root: Main application window.
+        logger (STM2Logger): Logger instance for file monitoring.
+    """
     def __init__(self):
+        """Initialize the GUI application."""
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("blue")
 
@@ -230,9 +316,10 @@ class STM2LoggerGUI:
         self.build_gui()
 
     # ----------------------------
-    # GUI 構築
+    # Build GUI / GUI 構築
     # ----------------------------
     def build_gui(self):
+        """Construct the GUI layout and widgets."""
         default_font = setup_font()
         frame = ctk.CTkFrame(self.root, corner_radius=20)
         frame.pack(fill="both", expand=True, padx=20, pady=20)
@@ -320,9 +407,15 @@ class STM2LoggerGUI:
         self.label_status.grid(row=7, column=0, columnspan=3, **pad)
 
     # ----------------------------
-    # Material 選択時
+    # Material Selection Handler / Material 選択時
     # ----------------------------
     def update_material_fields(self, event=None):
+        """
+        Update density and Z-ratio fields when a material is selected.
+
+        Args:
+            event: Event object (optional, for callback compatibility).
+        """
         material = self.combo_material.get()
         if material in MATERIAL_DATA:
             self.entry_density.delete(0, "end")
@@ -331,9 +424,10 @@ class STM2LoggerGUI:
             self.entry_zratio.insert(0, MATERIAL_DATA[material]["zratio"])
 
     # ----------------------------
-    # ファイル参照
+    # File Browser / ファイル参照
     # ----------------------------
     def browse_file(self):
+        """Open a file dialog to select a log file."""
         filename = filedialog.askopenfilename(
             title="STM-2 ログファイルを選択",
             filetypes=[("Log files", "*.log"), ("All files", "*.*")],
@@ -345,9 +439,15 @@ class STM2LoggerGUI:
             self.entry_runid.insert(0, os.path.splitext(os.path.basename(filename))[0])
 
     # ----------------------------
-    # DnD
+    # Drag and Drop Handler / DnD
     # ----------------------------
     def drop_file(self, event):
+        """
+        Handle file drag-and-drop events.
+
+        Args:
+            event: Drag-and-drop event object.
+        """
         path = event.data.strip("{}")
         self.entry_logfile.delete(0, "end")
         self.entry_logfile.insert(0, path)
@@ -355,9 +455,10 @@ class STM2LoggerGUI:
         self.entry_runid.insert(0, os.path.splitext(os.path.basename(path))[0])
 
     # ----------------------------
-    # Start
+    # Start Logging / Start
     # ----------------------------
     def start_logging(self):
+        """Start the logging process with current configuration."""
         try:
             material = self.combo_material.get()
             density = float(self.entry_density.get())
@@ -393,18 +494,25 @@ class STM2LoggerGUI:
         self.label_status.configure(text="Logging started…")
 
     # ----------------------------
-    # Stop
+    # Stop Logging / Stop
     # ----------------------------
     def stop_logging(self):
+        """Stop the logging process."""
         self.logger.stop()
         self.btn_start.configure(state="normal")
         self.btn_stop.configure(state="disabled")
         self.label_status.configure(text="Stopped")
 
     # ----------------------------
-    # GUI 更新
+    # GUI Update Callback / GUI 更新
     # ----------------------------
     def update_status(self, data):
+        """
+        Update the status label with new data from the logger.
+
+        Args:
+            data (dict): Data dictionary containing measurement values or error.
+        """
         if "error" in data:
             self.label_status.configure(text=f"Error: {data['error']}")
         else:
@@ -413,14 +521,15 @@ class STM2LoggerGUI:
             )
 
     # ----------------------------
-    # 実行
+    # Run Application / 実行
     # ----------------------------
     def run(self):
+        """Start the GUI main loop."""
         self.root.mainloop()
 
 
 # ============================================================
-# 実行
+# Main Entry Point / 実行
 # ============================================================
 if __name__ == "__main__":
     gui = STM2LoggerGUI()
