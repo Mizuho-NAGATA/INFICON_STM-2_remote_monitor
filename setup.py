@@ -18,7 +18,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Mizuho-NAGATA/STM2-remote",
-    packages=find_packages(),
+    py_modules=["STM2-remote-monitor"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",
@@ -34,9 +34,4 @@ setup(
     ],
     python_requires=">=3.8",
     install_requires=requirements,
-    entry_points={
-        "console_scripts": [
-            "stm2-monitor=STM2-remote-monitor:main",
-        ],
-    },
 )

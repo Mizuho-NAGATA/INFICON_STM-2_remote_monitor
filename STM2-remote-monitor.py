@@ -551,7 +551,12 @@ class STM2LoggerGUI:
 # ============================================================
 # Main Entry Point / 実行
 # ============================================================
-if __name__ == "__main__":
+def main() -> None:
+    """Main entry point for the application."""
     gui = STM2LoggerGUI()
     gui.run()
+
+
+if __name__ == "__main__":
+    main()
 
